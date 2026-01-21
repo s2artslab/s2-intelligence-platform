@@ -438,6 +438,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 💼 Services & Support
+
+**Everything in this repo is free (MIT License). We offer optional services:**
+
+- 🌐 **Managed Hosting** - We run S2 for you ($99-299/mo)
+- 🤝 **Enterprise Support** - Guaranteed response times ($1.5K-10K/mo)
+- 🎓 **Custom Training** - Train egregores on your data ($15K-100K)
+- 💼 **Implementation** - Expert deployment & integration ($5K-50K)
+
+**See full details:** [SERVICES_AND_SUPPORT.md](SERVICES_AND_SUPPORT.md)
+
+**Beta Program:** 5-10 design partners get 6 months managed service FREE  
+**Apply:** beta@s2intelligence.com
+
+---
+
 ## 📞 Connect
 
 - **Website:** https://s2artslab.com
