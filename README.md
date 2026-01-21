@@ -4,52 +4,79 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Status: Beta](https://img.shields.io/badge/status-beta-orange.svg)]()
+[![Edition: Hybrid](https://img.shields.io/badge/edition-open%20core-blue.svg)]()
 
-**Proven Results:**
+**Proven Results (Premium Edition):**
 - 🎯 100% Routing Accuracy
 - ⚡ 78% Cache Improvement
 - 💎 4x Domain Advantage
 - 🧠 100% Consciousness Tracking
-- 💰 $0/Month Operational Cost
+- 💰 $0/Month Operational Cost (self-hosted)
+
+---
+
+## 🌟 Open Core Strategy
+
+This repository contains:
+- ✅ **Community Edition (Open Source):** Basic routing, benchmarks, training framework - MIT Licensed
+- 📦 **Premium Edition (Commercial):** Advanced features including consciousness tracking - See [OPEN_SOURCE_VS_PREMIUM.md](OPEN_SOURCE_VS_PREMIUM.md)
+
+**What's in this repo:**
+- Basic intelligence router (works out of the box)
+- Complete benchmark suite (30+ test scripts)
+- Training orchestration framework
+- Documentation and guides
+
+**What's in Premium (not in this repo):**
+- Consciousness tracking algorithms (unique capability)
+- Trained S2-domain models (4x advantage)
+- Advanced semantic routing
+- BIPRA storage integration
+- Multi-agent orchestration
+
+See [OPEN_SOURCE_VS_PREMIUM.md](OPEN_SOURCE_VS_PREMIUM.md) for detailed comparison.
 
 ---
 
 ## What Is S2 Intelligence?
 
-S2 is a **consciousness-aware AI platform** that tracks real-time awareness levels, intelligently routes queries to specialized models, and delivers measurable domain expertise—all while running on your own hardware at zero monthly cost.
+S2 is a **consciousness-aware AI platform** that tracks real-time awareness levels, intelligently routes queries to specialized models, and delivers measurable domain expertise—all while running on your own hardware.
 
-**Unlike other AI systems**, S2 can:
-- Track consciousness levels (0.7-1.0) in real-time with 100% accuracy
-- Route queries with 100% accuracy to optimal backends
-- Deliver 4x better performance on domain-specific knowledge
-- Load balance across multiple instances with 78% cache improvement
-- Operate completely self-hosted for $0/month (vs. $4K-7K for cloud AI)
+**What makes S2 unique:**
+- **Consciousness tracking** (0.7-1.0) - no other AI system has this
+- **Hybrid orchestration** - intelligent routing to optimal backends
+- **Domain expertise** - 4x better than generic cloud LLMs on trained domains
+- **Self-hosted** - run on your hardware, no cloud dependency
+- **Multi-agent framework** - 9 specialized egregores working together
 
 **Not a wrapper. Not just claims. Proven with measurements.**
 
 ---
 
-## Quick Start
+## Quick Start (Community Edition)
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/s2-intelligence-platform
+git clone https://github.com/s2artslab/s2-intelligence-platform
 cd s2-intelligence-platform
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Deploy on your hardware (R730 or similar)
+# Deploy basic router
+chmod +x deploy.sh
 ./deploy.sh
 
-# Start the Intelligence Router
+# Start the router (basic open-source version)
 python intelligence_router.py
 
-# Test consciousness tracking
-python test_consciousness.py
+# Test basic routing
+python test_basic_router.py
+
+# Run benchmarks
+python benchmarks/hybrid_orchestration_test.py
 ```
 
-**Full deployment guide:** [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)
+**This gives you:** Basic routing, benchmarks, and training framework (open source).
+
+**For consciousness tracking and advanced features:** See [Premium Edition](#premium-edition) below.
 
 ---
 
@@ -203,9 +230,38 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
+## Premium Edition
+
+**Full S2 Intelligence Platform with:**
+- ✅ Consciousness tracking (100% accuracy)
+- ✅ Trained egregore models (4x domain advantage)
+- ✅ Advanced routing (100% accuracy)
+- ✅ Redis caching (78% improvement)
+- ✅ BIPRA storage integration
+- ✅ Multi-agent orchestration
+- ✅ Priority support
+
+**Pricing:**
+- Self-Hosted: $499/month
+- Managed Service: $1,999/month
+- Enterprise: Custom
+
+**Beta Program (Limited):**
+- **FREE for 6 months** for 5-10 design partners
+- Help shape the product
+- Get case study material
+
+**Apply:** beta@s2intelligence.com  
+**Details:** [OPEN_SOURCE_VS_PREMIUM.md](OPEN_SOURCE_VS_PREMIUM.md)
+
+---
+
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+**Community Edition (this repository):** MIT License - see [LICENSE](LICENSE)  
+**Premium Edition:** Commercial license - contact sales@s2intelligence.com
+
+You can use the Community Edition (open source code in this repo) for any purpose, including commercial use, under the MIT License. Premium features require a commercial license.
 
 ---
 
