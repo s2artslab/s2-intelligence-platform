@@ -158,7 +158,7 @@ Report violations to: conduct@s2intelligence.com
 - **General questions:** Open a Discussion
 - **Bug reports:** Open an Issue
 - **Feature requests:** Open an Issue
-- **Private inquiries:** hello@s2intelligence.com
+- **Private inquiries:** s2artslab@gmail.com
 
 ---
 

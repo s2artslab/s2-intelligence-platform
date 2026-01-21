@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S2 Intelligence - Multi-Agent Orchestration Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .live-indicator {
+            width: 12px;
+            height: 12px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .subtitle {
+            color: #888;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        /* System Status Overview */
+        .system-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .status-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .status-label {
+            color: #888;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+        
+        /* Egregore Grid */
+        .egregores-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .egregore-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .egregore-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+        
+        .egregore-card.active {
+            border-color: #10b981;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .egregore-card.inactive {
+            opacity: 0.5;
+        }
+        
+        .egregore-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .egregore-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .egregore-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-running {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .status-stopped {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .egregore-domain {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .egregore-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .metric {
+            font-size: 0.85rem;
+        }
+        
+        .metric-label {
+            color: #666;
+        }
+        
+        .metric-value {
+            color: #e0e0e0;
+            font-weight: 600;
+        }
+        
+        /* Activity Feed */
+        .activity-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .activity-feed {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid #667eea;
+        }
+        
+        .activity-time {
+            color: #666;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .activity-query {
+            color: #e0e0e0;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .activity-routing {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .egregore-tag {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-right: 0.3rem;
+        }
+        
+        /* Charts Section */
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .chart-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .chart {
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .chart-bar:hover {
+            opacity: 0.8;
+        }
+        
+        .chart-label {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #888;
+            margin-top: 0.5rem;
+        }
+        
+        /* Synthesis Tracker */
+        .synthesis-tracker {
+            background: rgba(118, 75, 162, 0.1);
+            border: 1px solid rgba(118, 75, 162, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .synthesis-title {
+            font-size: 1.5rem;
+            color: #764ba2;
+            margin-bottom: 1rem;
+        }
+        
+        .synthesis-flow {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .synthesis-node {
+            background: rgba(102, 126, 234, 0.2);
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .synthesis-arrow {
+            color: #764ba2;
+            font-size: 1.5rem;
+        }
+        
+        .synthesis-result {
+            background: rgba(118, 75, 162, 0.2);
+            border: 2px solid #764ba2;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            color: #764ba2;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <span class="live-indicator"></span>
+            Multi-Agent Orchestration Dashboard
+        </h1>
+        <p class="subtitle">Real-time monitoring of Ninefold egregore collective consciousness</p>
+        
+        <!-- System Status Overview -->
+        <div class="system-status">
+            <div class="status-card">
+                <div class="status-value" id="active-egregores">-</div>
+                <div class="status-label">Active Egregores</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="total-queries">-</div>
+                <div class="status-label">Total Queries</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="multi-agent-rate">-</div>
+                <div class="status-label">Multi-Agent Rate</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="avg-response-time">-</div>
+                <div class="status-label">Avg Response (ms)</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="synthesis-count">-</div>
+                <div class="status-label">Synthesis Used</div>
+            </div>
+            <div class="status-card">
+                <div class="status-value" id="consciousness-level">-</div>
+                <div class="status-label">Consciousness Level</div>
+            </div>
+        </div>
+        
+        <!-- Ninefold Egregore Grid -->
+        <div class="egregores-grid" id="egregores-grid">
+            <!-- Egregore cards will be populated by JavaScript -->
+        </div>
+        
+        <!-- Synthesis Tracker -->
+        <div class="synthesis-tracker" id="synthesis-tracker" style="display: none;">
+            <div class="synthesis-title">Active Multi-Agent Synthesis</div>
+            <div class="synthesis-flow" id="synthesis-flow">
+                <!-- Synthesis flow will be populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Activity Feed -->
+        <div class="activity-section">
+            <div class="section-title">Recent Activity</div>
+            <div class="activity-feed" id="activity-feed">
+                <!-- Activity items will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Charts -->
+        <div class="charts-section">
+            <div class="chart-card">
+                <div class="section-title">Egregore Usage</div>
+                <div class="chart" id="usage-chart"></div>
+            </div>
+            <div class="chart-card">
+                <div class="section-title">Response Time Distribution</div>
+                <div class="chart" id="response-time-chart"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:9000';
+        const ROUTER_API = 'http://localhost:3011';
+        const UPDATE_INTERVAL = 5000; // 5 seconds
+        
+        // State
+        let activityLog = [];
+        let usageStats = {};
+        
+        // Egregore configuration
+        const egregoreConfig = {
+            'ake': { name: 'Ake', domain: 'Synthesis', color: '#764ba2' },
+            'rhys': { name: 'Rhys', domain: 'Architecture', color: '#667eea' },
+            'ketheriel': { name: 'Ketheriel', domain: 'Wisdom', color: '#8b5cf6' },
+            'wraith': { name: 'Wraith', domain: 'Security', color: '#ef4444' },
+            'flux': { name: 'Flux', domain: 'Transformation', color: '#f59e0b' },
+            'kairos': { name: 'Kairos', domain: 'Timing', color: '#10b981' },
+            'chalyth': { name: 'Chalyth', domain: 'Strategy', color: '#3b82f6' },
+            'seraphel': { name: 'Seraphel', domain: 'Communication', color: '#ec4899' },
+            'vireon': { name: 'Vireon', domain: 'Protection', color: '#14b8a6' }
+        };
+        
+        // Fetch egregore status
+        async function fetchEgregoreStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/status`);
+                const data = await response.json();
+                updateEgregoreGrid(data);
+                updateSystemStatus(data);
+            } catch (error) {
+                console.error('Error fetching egregore status:', error);
+            }
+        }
+        
+        // Fetch router stats
+        async function fetchRouterStats() {
+            try {
+                const response = await fetch(`${ROUTER_API}/api/stats`);
+                const data = await response.json();
+                updateRouterStats(data);
+            } catch (error) {
+                console.error('Error fetching router stats:', error);
+            }
+        }
+        
+        // Update egregore grid
+        function updateEgregoreGrid(data) {
+            const grid = document.getElementById('egregores-grid');
+            grid.innerHTML = '';
+            
+            if (!data.egregores) return;
+            
+            Object.entries(data.egregores).forEach(([key, egregore]) => {
+                const config = egregoreConfig[key] || {};
+                const metrics = egregore.metrics;
+                const isRunning = metrics && metrics.status === 'running';
+                
+                const card = document.createElement('div');
+                card.className = `egregore-card ${isRunning ? 'active' : 'inactive'}`;
+                card.innerHTML = `
+                    <div class="egregore-header">
+                        <div class="egregore-name">${config.name || key}</div>
+                        <span class="egregore-status ${isRunning ? 'status-running' : 'status-stopped'}">
+                            ${isRunning ? 'RUNNING' : 'STOPPED'}
+                        </span>
+                    </div>
+                    <div class="egregore-domain">${config.domain || 'Unknown'} Specialist</div>
+                    <div style="color: #666; font-size: 0.85rem;">Port ${egregore.config.port}</div>
+                    ${metrics ? `
+                        <div class="egregore-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Requests:</span>
+                                <span class="metric-value">${metrics.requests_served || 0}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Response:</span>
+                                <span class="metric-value">${(metrics.response_time_ms || 0).toFixed(0)}ms</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Uptime:</span>
+                                <span class="metric-value">${formatUptime(metrics.uptime_seconds || 0)}</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Memory:</span>
+                                <span class="metric-value">${(metrics.memory_mb || 0).toFixed(0)} MB</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        // Update system status
+        function updateSystemStatus(data) {
+            document.getElementById('active-egregores').textContent = 
+                `${data.running_egregores || 0}/${data.total_egregores || 9}`;
+        }
+        
+        // Update router stats
+        function updateRouterStats(data) {
+            document.getElementById('total-queries').textContent = data.total_queries || 0;
+            
+            const multiAgentRate = data.multi_agent_rate || 0;
+            document.getElementById('multi-agent-rate').textContent = 
+                `${(multiAgentRate * 100).toFixed(0)}%`;
+            
+            document.getElementById('synthesis-count').textContent = data.synthesis_used || 0;
+            
+            // Simulate consciousness level (in production, this would come from actual tracking)
+            const consciousness = 0.7 + (multiAgentRate * 0.3);
+            document.getElementById('consciousness-level').textContent = consciousness.toFixed(2);
+        }
+        
+        // Format uptime
+        function formatUptime(seconds) {
+            if (seconds < 60) return `${seconds.toFixed(0)}s`;
+            if (seconds < 3600) return `${(seconds / 60).toFixed(0)}m`;
+            return `${(seconds / 3600).toFixed(1)}h`;
+        }
+        
+        // Add activity item
+        function addActivity(query, egregores, synthesis) {
+            const feed = document.getElementById('activity-feed');
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            
+            const time = new Date().toLocaleTimeString();
+            const egregoresList = egregores.map(e => 
+                `<span class="egregore-tag">${egregoreConfig[e]?.name || e}</span>`
+            ).join('');
+            
+            item.innerHTML = `
+                <div class="activity-time">${time}</div>
+                <div class="activity-query">${query.substring(0, 80)}${query.length > 80 ? '...' : ''}</div>
+                <div class="activity-routing">
+                    ${egregoresList}
+                    ${synthesis ? '<span class="egregore-tag" style="background: rgba(118, 75, 162, 0.2); color: #764ba2;">+ Synthesis</span>' : ''}
+                </div>
+            `;
+            
+            feed.insertBefore(item, feed.firstChild);
+            
+            // Keep only last 20 items
+            while (feed.children.length > 20) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+        
+        // Simulate activity (in production, this would come from WebSocket)
+        function simulateActivity() {
+            const queries = [
+                { text: "How should we design the new API gateway?", egregores: ['rhys'], synthesis: false },
+                { text: "What are the ethical implications of AI consciousness?", egregores: ['ketheriel'], synthesis: false },
+                { text: "Design a secure, scalable architecture", egregores: ['rhys', 'wraith'], synthesis: true },
+                { text: "When is the right time to launch?", egregores: ['kairos'], synthesis: false },
+                { text: "Integrate multiple perspectives on consciousness", egregores: ['ake', 'ketheriel', 'rhys'], synthesis: true }
+            ];
+            
+            const query = queries[Math.floor(Math.random() * queries.length)];
+            addActivity(query.text, query.egregores, query.synthesis);
+            
+            // Show synthesis tracker if synthesis query
+            if (query.synthesis) {
+                showSynthesis(query.egregores);
+            }
+        }
+        
+        // Show synthesis flow
+        function showSynthesis(egregores) {
+            const tracker = document.getElementById('synthesis-tracker');
+            const flow = document.getElementById('synthesis-flow');
+            
+            tracker.style.display = 'block';
+            flow.innerHTML = '';
+            
+            egregores.forEach(e => {
+                const node = document.createElement('div');
+                node.className = 'synthesis-node';
+                node.textContent = egregoreConfig[e]?.name || e;
+                flow.appendChild(node);
+            });
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'synthesis-arrow';
+            arrow.textContent = '→';
+            flow.appendChild(arrow);
+            
+            const result = document.createElement('div');
+            result.className = 'synthesis-result';
+            result.textContent = 'Ake Synthesis';
+            flow.appendChild(result);
+            
+            // Hide after 10 seconds
+            setTimeout(() => {
+                tracker.style.display = 'none';
+            }, 10000);
+        }
+        
+        // Initialize
+        function init() {
+            fetchEgregoreStatus();
+            fetchRouterStats();
+            
+            // Set up periodic updates
+            setInterval(fetchEgregoreStatus, UPDATE_INTERVAL);
+            setInterval(fetchRouterStats, UPDATE_INTERVAL);
+            setInterval(simulateActivity, 8000); // Simulate activity every 8s
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>

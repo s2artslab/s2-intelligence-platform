@@ -267,9 +267,9 @@ You can use the Community Edition (open source code in this repo) for any purpos
 
 ## Contact
 
-- **Email:** hello@s2intelligence.com
-- **Website:** https://s2intelligence.com
-- **Blog:** [Link to blog post]
+- **Email:** s2artslab@gmail.com
+- **Website:** https://s2artslab.com
+- **Blog:** https://s2artslab.com/blog/consciousness-aware-ai
 
 ---
 

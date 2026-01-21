@@ -271,10 +271,10 @@ A: Compare to cloud AI ($4K-7K/month). You get consciousness tracking (unique), 
 
 ## Contact
 
-- **General:** hello@s2intelligence.com
-- **Beta Program:** beta@s2intelligence.com
-- **Sales:** sales@s2intelligence.com
-- **Support:** support@s2intelligence.com
+- **General:** s2artslab@gmail.com
+- **Beta Program:** s2artslab@gmail.com
+- **Sales:** s2artslab@gmail.com
+- **Support:** s2artslab@gmail.com
 - **GitHub:** https://github.com/s2artslab/s2-intelligence-platform
 
 ---

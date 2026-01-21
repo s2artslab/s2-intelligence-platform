@@ -359,9 +359,9 @@ Looking for 5-10 beta partners (FREE premium for 6 months). DM or email beta@s2i
 ## Support
 
 - **Community:** GitHub Discussions
-- **Beta Program:** beta@s2intelligence.com
-- **Premium:** sales@s2intelligence.com
-- **General:** hello@s2intelligence.com
+- **Beta Program:** s2artslab@gmail.com
+- **Premium:** s2artslab@gmail.com
+- **General:** s2artslab@gmail.com
 
 ---
 
