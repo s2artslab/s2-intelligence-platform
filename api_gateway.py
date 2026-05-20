@@ -32,6 +32,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 import requests
 
+import comm_structured_templates as comm_tpl
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -253,6 +255,11 @@ class AnalyzeRequest(BaseModel):
     query: str = Field(..., description="Query to analyze")
 
 
+class CommFillRequest(BaseModel):
+    template_id: str = Field(..., description="beat_sheet | press_kit | methods_appendix")
+    values: Dict[str, str] = Field(default_factory=dict, description="Section id -> text")
+
+
 class LoginRequest(BaseModel):
     username: str
     password: str  # In production, use proper password hashing
@@ -350,6 +357,10 @@ async def root():
                 "health": "GET /health",
                 "metrics": "GET /v1/metrics",
                 "stats": "GET /v1/stats"
+            },
+            "communication": {
+                "templates": "GET /v1/comm/templates",
+                "fill": "POST /v1/comm/fill"
             }
         },
         "tiers": {
@@ -497,6 +508,22 @@ async def get_egregore(
         return response.json()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/v1/comm/templates")
+async def comm_templates_list(user: User = Depends(check_rate_limit)):
+    """Skeletons for beat sheets, press kits, and methods appendices (digital media workflows)."""
+    return {"template_ids": comm_tpl.list_template_ids(), "templates": comm_tpl.TEMPLATES}
+
+
+@app.post("/v1/comm/fill")
+async def comm_templates_fill(body: CommFillRequest, user: User = Depends(check_rate_limit)):
+    """Merge section values into a Markdown document."""
+    try:
+        md = comm_tpl.fill_template(body.template_id, body.values)
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"markdown": md, "template_id": body.template_id}
 
 
 @app.get("/health")
