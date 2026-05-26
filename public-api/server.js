@@ -32,6 +32,11 @@ const { ollamaChat, ollamaHealth } = require('./lib/ollama');
 const { unifiedLoraChat, unifiedHealth } = require('./lib/unified-lora');
 const { buildGatewayMessages } = require('./lib/prompts');
 const { retrieveContext, ragStatus } = require('./lib/rag');
+const { assembleContinuity } = require('./lib/continuity');
+const { canonStatus } = require('./lib/canon');
+const { memoryStatus, listOpenTensions, upsertTension, loadStore } = require('./lib/memory/tension-store');
+const { reflectSessionHeuristic, scheduleReflection } = require('./lib/memory/reflection');
+const { reloadIndex } = require('./lib/retrieval-index');
 const { verifyHostedEntitlement } = require('./lib/billing');
 const { generateStructuredPaths } = require('./lib/exploration-paths');
 const {
@@ -110,6 +115,9 @@ app.get('/health', async (_req, res) => {
     hosted_inference:
       PREFER_UNIFIED_LORA && unified.ok ? 'unified-lora' : ollama.activeModel || 'ollama',
     rag,
+    canon: canonStatus(),
+    memory: memoryStatus(),
+    continuity_layers: ['canon', 'discourse', 'cadence', 'memory', 'retrieval', 'asymmetry'],
     document_intelligence: await docIntelHealth(),
   });
 });
@@ -156,11 +164,12 @@ async function handleChat(req, res) {
     }
 
     const userQuery = lastUserText(req.body);
-    const ragLimit = req.body.rag_limit ?? Number(process.env.RAG_LIMIT || 5);
-    const ragMaxChars = req.body.rag_max_chars ?? Number(process.env.RAG_MAX_CHARS || 3000);
-    const rag = retrieveContext(userQuery, { limit: ragLimit, maxChars: ragMaxChars });
-
-    const messages = buildGatewayMessages(req.body, rag.text);
+    const continuity = assembleContinuity(req.body, userQuery, ownerId || 'global');
+    const messages = buildGatewayMessages(req.body, continuity.rag.text, {
+      canonBlock: continuity.canonBlock,
+      tensionBlock: continuity.tensionBlock,
+      cadenceOverlay: continuity.cadence.overlay,
+    });
     const maxTokens = req.body.max_tokens ?? 800;
     const temperature = resolveTemperature(req, {
       endpointDefault: useHosted ? HOSTED_TEMPERATURE : 0.4,
@@ -203,15 +212,29 @@ async function handleChat(req, res) {
       source = 'groq-byok';
     }
 
+    const assistantText = result.content || result.response || '';
+    if (req.body.reflect !== false) {
+      scheduleReflection({
+        ownerId: ownerId || 'global',
+        userText: userQuery,
+        assistantText,
+        sessionId: req.body.session_id || req.body.sessionId,
+      });
+    }
+
     res.json({
       success: true,
-      content: result.content,
-      response: result.response,
+      content: assistantText,
+      response: assistantText,
       model: result.model,
       source,
       assistant: 's2-ake',
-      rag_used: rag.chunks.length > 0,
-      rag_chunks: rag.chunks,
+      cadence: continuity.cadence.cadence,
+      adapter_hint: continuity.cadence.adapterHint,
+      rag_used: continuity.rag.chunks.length > 0,
+      rag_chunks: continuity.rag.chunks,
+      canon_used: Boolean(continuity.canonBlock),
+      tensions_active: continuity.tensionIds,
       processing_time_ms: null,
     });
   } catch (e) {
@@ -227,6 +250,90 @@ async function handleChat(req, res) {
 app.post('/api/ai/chat', handleChat);
 app.post('/api/public/chat', handleChat);
 app.post('/api/public/chat-with-context', handleChat);
+
+function memoryAuthorized(req) {
+  const expected = (
+    process.env.MEMORY_API_KEY ||
+    process.env.STRATEGIST_HUB_API_KEY ||
+    process.env.SHARAYAH_DIGEST_KEY ||
+    ''
+  ).trim();
+  if (!expected) return true;
+  const got = (req.get('X-API-Key') || req.get('x-api-key') || '').trim();
+  return got === expected;
+}
+
+/** Layer 4 — list open tensions for owner scope */
+app.get('/api/public/memory/tensions', (req, res) => {
+  if (!memoryAuthorized(req)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+  const ownerId = ownerIdFrom(req) || 'global';
+  res.json({
+    success: true,
+    owner_id: ownerId,
+    tensions: listOpenTensions(ownerId, {
+      limit: Number(req.query.limit || 20),
+    }),
+  });
+});
+
+/** Layer 4 — upsert tension (apps, reflection) */
+app.post('/api/public/memory/tensions', (req, res) => {
+  if (!memoryAuthorized(req)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+  const ownerId = ownerIdFrom(req) || req.body?.owner_id || 'global';
+  try {
+    const tension = upsertTension(ownerId, req.body || {});
+    res.json({ success: true, tension });
+  } catch (e) {
+    res.status(400).json({ success: false, error: e.message });
+  }
+});
+
+/** Layer 4 — memory store summary */
+app.get('/api/public/memory/status', (req, res) => {
+  const ownerId = ownerIdFrom(req) || 'global';
+  const store = loadStore(ownerId);
+  res.json({
+    success: true,
+    owner_id: ownerId,
+    memory: memoryStatus(),
+    open_tensions: store.tensions.filter(
+      (t) => t.status === 'open' || t.status === 'deepened',
+    ).length,
+    episodic_count: store.episodic.length,
+  });
+});
+
+/** Internal — reload retrieval index + canon */
+app.post('/api/internal/continuity/reload', (req, res) => {
+  if (!memoryAuthorized(req)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+  reloadIndex();
+  res.json({
+    success: true,
+    rag: ragStatus(),
+    canon: canonStatus(),
+  });
+});
+
+/** Internal — run reflection job for one session */
+app.post('/api/internal/memory/reflect', (req, res) => {
+  if (!memoryAuthorized(req)) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+  const ownerId = ownerIdFrom(req) || req.body?.owner_id || 'global';
+  const result = reflectSessionHeuristic({
+    ownerId,
+    userText: req.body?.user_text || req.body?.userText || '',
+    assistantText: req.body?.assistant_text || req.body?.assistantText || '',
+    sessionId: req.body?.session_id,
+  });
+  res.json({ success: true, ...result });
+});
 
 /** PSLA exploration — structured litigation paths (JSON schema). */
 app.post('/api/psla/exploration/paths', async (req, res) => {
@@ -245,17 +352,15 @@ app.post('/api/psla/exploration/paths', async (req, res) => {
       req.body.user_message ||
       req.body.text ||
       'Compare litigation paths for this pre-filing situation.';
-    const rag = retrieveContext(
+    const continuity = assembleContinuity(
+      { ...req.body, exploration: true, product_id: 'psla-exploration' },
       `${userQuery} ${req.body.jurisdiction || ''} pre-filing litigation paths`,
-      {
-        limit: req.body.rag_limit ?? 6,
-        maxChars: req.body.rag_max_chars ?? 4000,
-      },
+      ownerId || 'global',
     );
 
     const { paths, model, source } = await generateStructuredPaths({
       body: req.body,
-      ragBlock: rag.text,
+      ragBlock: continuity.rag.text,
       groqKey,
       useHosted,
       maxTokens: req.body.max_tokens ?? 4000,
@@ -270,7 +375,7 @@ app.post('/api/psla/exploration/paths', async (req, res) => {
       paths,
       model,
       source,
-      rag_used: rag.chunks.length > 0,
+      rag_used: continuity.rag.chunks.length > 0,
       product: 'psla-exploration',
     });
   } catch (e) {
@@ -296,12 +401,13 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
     }
 
     const userQuery = lastUserText(req.body);
-    const rag = retrieveContext(userQuery, {
-      limit: req.body.rag_limit ?? 5,
-      maxChars: req.body.rag_max_chars ?? 3000,
-    });
+    const continuity = assembleContinuity(
+      { ...req.body, exploration: true },
+      userQuery,
+      ownerId || 'global',
+    );
 
-    const messages = buildExplorationChatMessages(req.body, rag.text);
+    const messages = buildExplorationChatMessages(req.body, continuity.rag.text);
     const maxTokens = req.body.max_tokens ?? 3000;
     const temperature = resolveTemperature(req, {
       endpointDefault: Number(process.env.OLLAMA_EXPLORATION_TEMPERATURE || 0.15),
@@ -329,7 +435,8 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
       response: result.content,
       model: result.model,
       source,
-      rag_used: rag.chunks.length > 0,
+      rag_used: continuity.rag.chunks.length > 0,
+      cadence: continuity.cadence.cadence,
       product: 'psla-exploration',
     });
   } catch (e) {

@@ -1,0 +1,34 @@
+{
+  "government-defendant-doj.md": {
+    "layer": "knowledge",
+    "cadence": "legal",
+    "concept_tags": [
+      "government",
+      "doj",
+      "immunity",
+      "12b6",
+      "exhaustion",
+      "abstention",
+      "pro_se"
+    ],
+    "discourse_role": "frame",
+    "tension_ids": []
+  },
+  "pro-se-legal-basics.md": {
+    "layer": "knowledge",
+    "cadence": "legal",
+    "concept_tags": ["pro_se", "procedure", "filing", "deadline"],
+    "discourse_role": "frame"
+  },
+  "psla-exploration.md": {
+    "layer": "knowledge",
+    "cadence": "strategic",
+    "concept_tags": ["psla", "pre-filing", "litigation_paths", "exploration"],
+    "discourse_role": "frame"
+  },
+  "s2-ecosystem.json": {
+    "layer": "knowledge",
+    "cadence": "systems",
+    "concept_tags": ["ecosystem", "hosted", "byok", "assistant"]
+  }
+}

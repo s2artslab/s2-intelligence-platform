@@ -1,0 +1,19 @@
+{
+  "chunks": [
+    {
+      "id": "s2-local-first",
+      "tags": ["privacy", "local", "sovereign"],
+      "text": "S² apps default to local-first matter data on the user's device. Cloud sync is optional. AI can run via the user's own API keys (BYOK), subscription-hosted private inference on S² infrastructure, or the user's LAN — depending on product configuration."
+    },
+    {
+      "id": "s2-hosted-tier",
+      "tags": ["billing", "hosted", "subscription"],
+      "text": "Hosted S² AI is a paid infrastructure tier: the organization runs private Ollama capacity so users without their own Groq key still get full assistant features. Bring-your-own-key remains free where supported."
+    },
+    {
+      "id": "s2-assistant-single",
+      "tags": ["assistant", "product"],
+      "text": "Consumer S² apps present one assistant experience. The assistant synthesizes answers from collective organizational knowledge and app-specific context (for example active litigation matter summaries). Users are not asked to choose between internal specialist modes."
+    }
+  ]
+}

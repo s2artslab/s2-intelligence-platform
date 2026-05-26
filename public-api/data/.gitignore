@@ -1,0 +1,4 @@
+tensions/
+*.json
+!discourse-index.json
+!retrieval-index.json

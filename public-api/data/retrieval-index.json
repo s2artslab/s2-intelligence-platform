@@ -1,0 +1,305 @@
+{
+  "generated_at": "2026-05-26T16:56:30.547Z",
+  "chunk_count": 23,
+  "by_layer": {
+    "canon": 2,
+    "knowledge": 20,
+    "discourse": 1
+  },
+  "chunks": [
+    {
+      "id": "axiom.deep-key.threshold",
+      "text": "Deep Key opens at the threshold — not by accumulation of belief, but by standing where interpretation must commit.\r\n\r\nWhat must remain true: presence precedes synthesis; synthesis that erases the threshold is not integration, it is escape.",
+      "layer": "canon",
+      "concept_tags": [
+        "deep-key",
+        "threshold",
+        "presence"
+      ],
+      "symbolic_links": [],
+      "discourse_role": "axiom",
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "axioms/deep-key-threshold.md"
+    },
+    {
+      "id": "README",
+      "text": "# Canon (deploy bundle)\r\n\r\nSource of truth: `s2-research/canon/`. This tree is synced for r730 / public-api deploy when research repo is absent.\r\n\r\nRegenerate manifest in research: `python scripts/export_canon_manifest.py`",
+      "layer": "canon",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "discourse_role": "axiom",
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "README.md"
+    },
+    {
+      "id": "government-defendant-doj.md:s1",
+      "text": "## Orientation\r\n\r\nLitigation against DOJ, a U.S. Attorney's Office, a state Attorney General, or agency counsel is repeat-player defensive litigation. Counsel often pursue early dismissal, stays, immunity, exhaustion, abstention, and discovery limits before merits. Pro se litigants should expect strict deadlines and no procedural coaching from the court.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "government-defendant-doj.md"
+    },
+    {
+      "id": "government-defendant-doj.md:s2",
+      "text": "## Response format for assistant\r\n\r\nWhen user describes a government filing: (1) name the motion, (2) state counsel's goal, (3) deadline, (4) numbered response steps, (5) traps to avoid, (6) record facts to preserve.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "government-defendant-doj.md"
+    },
+    {
+      "id": "government-defendant-doj.md:s3",
+      "text": "## Common moves\r\n\r\nRule 12(b)(1) jurisdiction; Rule 12(b)(6) failure to state claim; qualified immunity; sovereign and official immunity; failure to exhaust administrative remedies; Younger/Pullman/Burford/Colorado River abstention; stay pending parallel proceeding; extensions and stipulated briefing delays; Rule 56 summary judgment; discovery objections and motions to compel; protective orders and sealing; removal and remand; venue transfer; substitution and U.S. intervention.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "government-defendant-doj.md"
+    },
+    {
+      "id": "government-defendant-doj.md:s4",
+      "text": "## Step discipline\r\n\r\nOne filing at a time. Tie advice to the identified move. Ask one clarifying question if capacity or exhaustion facts are missing. Distinguish individual vs official capacity and state vs federal tracks.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "government-defendant-doj.md"
+    },
+    {
+      "id": "pro-se-legal-basics.md:s1",
+      "text": "## Deadlines and calendaring\r\n\r\nFederal and state courts treat deadline computation as mandatory, not advisory. Missing a response deadline often results in default or dismissal regardless of the merits. Always verify whether the clock runs from service, filing, or a specific event, and whether state rules modify federal timing when both apply.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "pro-se-legal-basics.md"
+    },
+    {
+      "id": "pro-se-legal-basics.md:s2",
+      "text": "## Local rules\r\n\r\nMany districts have local rules that override or supplement general civil procedure. These may require specific cover pages, font sizes, line numbering, meet-and-confer certificates, or page limits on motions. A filing that complies with national form rules can still be rejected for local rule violations.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "pro-se-legal-basics.md"
+    },
+    {
+      "id": "pro-se-legal-basics.md:s3",
+      "text": "## Motions practice\r\n\r\nDispositive and non-dispositive motions typically require a notice of motion, memorandum of points and authorities, declarations or affidavits where facts are disputed, and a proposed order. A letter to the judge is not a substitute for a properly noticed motion in most courts.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "pro-se-legal-basics.md"
+    },
+    {
+      "id": "pro-se-legal-basics.md:s4",
+      "text": "## Pro se expectations\r\n\r\nCourts may extend some leniency to pro se parties on formatting, but rarely on core deadlines or service requirements. Litigants should document service meticulously and retain proof of filing timestamps.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "pro-se-legal-basics.md"
+    },
+    {
+      "id": "pro-se-legal-basics.md:s5",
+      "text": "## Research discipline\r\n\r\nLegal research for pro se work should prioritize controlling authority in the correct jurisdiction, then persuasive authority. Secondary sources and AI summaries require verification against primary sources before reliance in filings.",
+      "layer": "knowledge",
+      "cadence": "legal",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "pro-se-legal-basics.md"
+    },
+    {
+      "id": "psla-exploration.md:s1",
+      "text": "## Purpose\r\n\r\nUsers have not filed in court. They compare administrative, state court, federal court, agency, arbitration, and negotiation paths before opening a formal matter.",
+      "layer": "knowledge",
+      "cadence": "strategic",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "psla-exploration.md"
+    },
+    {
+      "id": "psla-exploration.md:s2",
+      "text": "## Path types\r\n\r\n- **negotiation** — demand letters, settlement talks; often required before suit.\r\n- **administrative** / **agency** — exhaustion of remedies (EEOC, unemployment appeals, licensing boards).\r\n- **state_court** — state trial courts; know statute of limitations and service rules.\r\n- **federal_court** — requires federal question or diversity; procedural posture differs from state.\r\n- **arbitration** — if contract mandates arbitration, court may lack jurisdiction until arbitration completes.",
+      "layer": "knowledge",
+      "cadence": "strategic",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "psla-exploration.md"
+    },
+    {
+      "id": "psla-exploration.md:s3",
+      "text": "## Compare dimensions\r\n\r\nFor each path: prerequisites, timeline, cost/complexity, risks of wrong forum, and whether filing starts a clock (SOL, administrative deadlines).",
+      "layer": "knowledge",
+      "cadence": "strategic",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "psla-exploration.md"
+    },
+    {
+      "id": "psla-exploration.md:s4",
+      "text": "## Verification\r\n\r\nAll deadlines and rule citations must be verified against official court and agency sources.",
+      "layer": "knowledge",
+      "cadence": "strategic",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "psla-exploration.md"
+    },
+    {
+      "id": "README.md:s0",
+      "text": "# Collective knowledge (RAG corpus)\r\n\r\nFiles here are loaded at API startup into an in-memory index (`lib/rag.js`).",
+      "layer": "knowledge",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "README.md"
+    },
+    {
+      "id": "README.md:s1",
+      "text": "## Formats\r\n\r\n- **Markdown** (`.md`) — split on `##` headings; each section becomes a chunk.\r\n- **JSON** (`.json`) — `{ \"chunks\": [{ \"id\", \"text\", \"tags\": [] }] }`.",
+      "layer": "knowledge",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "README.md"
+    },
+    {
+      "id": "README.md:s2",
+      "text": "## Adding content\r\n\r\n1. Add or edit files in this directory.\r\n2. Restart `public-api` (or redeploy).\r\n3. Confirm `GET /api/public/capability` shows `rag_available: true`.\r\n\r\nKeep chunks factual and app-safe. Do not put user PII or secrets here.",
+      "layer": "knowledge",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "README.md"
+    },
+    {
+      "id": "README.md:s3",
+      "text": "## Tags\r\n\r\nUse `tags` in JSON chunks to boost retrieval (e.g. `legal`, `billing`, `hosted`).",
+      "layer": "knowledge",
+      "concept_tags": [],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "README.md"
+    },
+    {
+      "id": "s2-local-first",
+      "text": "S² apps default to local-first matter data on the user's device. Cloud sync is optional. AI can run via the user's own API keys (BYOK), subscription-hosted private inference on S² infrastructure, or the user's LAN — depending on product configuration.",
+      "layer": "knowledge",
+      "cadence": "systems",
+      "concept_tags": [
+        "privacy",
+        "local",
+        "sovereign"
+      ],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "s2-ecosystem.json"
+    },
+    {
+      "id": "s2-hosted-tier",
+      "text": "Hosted S² AI is a paid infrastructure tier: the organization runs private Ollama capacity so users without their own Groq key still get full assistant features. Bring-your-own-key remains free where supported.",
+      "layer": "knowledge",
+      "cadence": "systems",
+      "concept_tags": [
+        "billing",
+        "hosted",
+        "subscription"
+      ],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "s2-ecosystem.json"
+    },
+    {
+      "id": "s2-assistant-single",
+      "text": "Consumer S² apps present one assistant experience. The assistant synthesizes answers from collective organizational knowledge and app-specific context (for example active litigation matter summaries). Users are not asked to choose between internal specialist modes.",
+      "layer": "knowledge",
+      "cadence": "systems",
+      "concept_tags": [
+        "assistant",
+        "product"
+      ],
+      "symbolic_links": [],
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [],
+      "source": "s2-ecosystem.json"
+    },
+    {
+      "id": "discourse.pilot.001",
+      "text": "user: They filed a Rule 12(b)(6). I need to respond but I keep trying to explain the whole story at once.\nassistant: One motion at a time. For 12(b)(6) the court asks only whether your complaint states a claim — not whether you are right on the merits.\n\nNumbered path:\n1. Identify each challenged claim.\n2. Map elements you must allege.\n3. Quote complaint paragraphs that satisfy each element.\n4. Flag what you cannot support yet — do not fabricate.\n\nWhat is the jurisdiction and which claims survive if one count fails?\nuser: Federal court. Two counts — one might not survive.\nassistant: Then we split the record: strengthen the viable count first; for the weak count either amend theory or accept severance risk. Do not file a narrative brief — file a map.\n\nOpen: which count is weak and why? That tension stays until you name it.",
+      "layer": "discourse",
+      "cadence": "legal",
+      "concept_tags": [
+        "deep-key",
+        "12b6",
+        "government"
+      ],
+      "symbolic_links": [],
+      "discourse_role": "example",
+      "contradicts": [],
+      "unresolved_with": [],
+      "tension_ids": [
+        "axiom.deep-key.threshold"
+      ],
+      "source": "discourse/export/pilot.001.jsonl"
+    }
+  ]
+}

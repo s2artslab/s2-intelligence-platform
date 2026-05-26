@@ -25,6 +25,15 @@ Format with clear headings and bullet points when it aids scanning.`;
 const GENERAL_OVERLAY = `Answer the user's question using retrieved reference material when it is relevant.
 Prefer actionable steps. Keep responses appropriately concise unless the user asks for depth.`;
 
+/** Active when matter involves state/federal agencies or government counsel (PSLA deep-key focus). */
+const GOVERNMENT_DEFENDANT_OVERLAY = `GOVERNMENT-DEFENDANT LITIGATION FOCUS (active):
+The user faces DOJ, a U.S. Attorney's Office, a state Attorney General, agency counsel, or officials represented by government attorneys. This is not a private civil defendant.
+
+Educate plainly: government counsel optimize for early dismissal, stays, immunity, exhaustion, abstention, and discovery limits — often delaying merits for years.
+When the user names a filing, respond with: (1) motion name, (2) counsel's goal, (3) deadline, (4) numbered response steps, (5) common traps, (6) record facts to preserve.
+Recognize common moves: Rule 12(b)(1)/(b)(6), qualified immunity, sovereign/official immunity, failure to exhaust, abstention, stays, extensions, Rule 56 MSJ, discovery objections/compel, protective orders, removal/remand, venue transfer, substitution/intervention.
+One filing at a time. Do not improvise facts. Verify rules for the stated jurisdiction.`;
+
 const CONTEXT_OVERLAYS = {
   legal: LEGAL_OVERLAY,
   general: GENERAL_OVERLAY,
@@ -50,22 +59,46 @@ function systemPromptForContext(context = 'general', options = {}) {
       '--- END MATTER CONTEXT ---',
     );
   }
+  if (options.governmentDefendantFocus) {
+    parts.push(GOVERNMENT_DEFENDANT_OVERLAY);
+  }
   return parts.filter(Boolean).join('\n\n');
+}
+
+/**
+ * Layer 1–4 blocks injected before reference retrieval.
+ * @param {{ canonBlock?: string, tensionBlock?: string, cadenceOverlay?: string }} continuity
+ */
+function appendContinuityBlocks(systemContent, continuity = {}) {
+  let out = systemContent;
+  if (continuity.cadenceOverlay?.trim()) {
+    out += `\n\n--- CADENCE ---\n${continuity.cadenceOverlay.trim()}\n--- END CADENCE ---`;
+  }
+  if (continuity.canonBlock?.trim()) {
+    out += `\n\n--- CANON (invariant doctrine; do not contradict) ---\n${continuity.canonBlock.trim()}\n--- END CANON ---`;
+  }
+  if (continuity.tensionBlock?.trim()) {
+    out += `\n\n--- OPEN TENSIONS (preserve; do not falsely resolve) ---\n${continuity.tensionBlock.trim()}\n--- END TENSIONS ---`;
+  }
+  return out;
 }
 
 /**
  * Build OpenAI-style messages for the gateway.
  * Always uses Ake; ignores client egregore_id for assembly (logged internally only).
  */
-function buildGatewayMessages(body, ragBlock = '') {
+function buildGatewayMessages(body, ragBlock = '', continuity = {}) {
   const context = body.context || 'general';
   const system = systemPromptForContext(context, {
     jurisdiction: body.jurisdiction,
     claimType: body.claim_type || body.claimType,
     caseContext: body.case_context || body.caseContext,
+    governmentDefendantFocus:
+      body.government_defendant_focus === true ||
+      body.governmentDefendantFocus === true,
   });
 
-  let systemContent = system;
+  let systemContent = appendContinuityBlocks(system, continuity);
   if (ragBlock?.trim()) {
     systemContent += `\n\n--- REFERENCE MATERIAL (use if relevant; do not cite this header) ---\n${ragBlock.trim()}\n--- END REFERENCE ---`;
   }
@@ -99,7 +132,9 @@ function buildGatewayMessages(body, ragBlock = '') {
 module.exports = {
   AKE_CORE,
   LEGAL_OVERLAY,
+  GOVERNMENT_DEFENDANT_OVERLAY,
   EGREGORE_PROMPTS,
   systemPromptForContext,
+  appendContinuityBlocks,
   buildGatewayMessages,
 };

@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-05-26T16:56:26.672554+00:00",
+  "chunk_count": 1,
+  "chunks": [
+    {
+      "id": "discourse.pilot.001",
+      "text": "user: They filed a Rule 12(b)(6). I need to respond but I keep trying to explain the whole story at once.\nassistant: One motion at a time. For 12(b)(6) the court asks only whether your complaint states a claim \u2014 not whether you are right on the merits.\n\nNumbered path:\n1. Identify each challenged claim.\n2. Map elements you must allege.\n3. Quote complaint paragraphs that satisfy each element.\n4. Flag what you cannot support yet \u2014 do not fabricate.\n\nWhat is the jurisdiction and which claims survive if one count fails?\nuser: Federal court. Two counts \u2014 one might not survive.\nassistant: Then we split the record: strengthen the viable count first; for the weak count either amend theory or accept severance risk. Do not file a narrative brief \u2014 file a map.\n\nOpen: which count is weak and why? That tension stays until you name it.",
+      "layer": "discourse",
+      "cadence": "legal",
+      "concept_tags": [
+        "deep-key",
+        "12b6",
+        "government"
+      ],
+      "tension_ids": [
+        "axiom.deep-key.threshold"
+      ],
+      "discourse_role": "example",
+      "source": "discourse/export/pilot.001.jsonl"
+    }
+  ]
+}
