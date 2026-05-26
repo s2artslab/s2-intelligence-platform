@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ake · Hosted Chat · S² Gateway</title>
+  <link rel="canonical" href="https://api.s2artslab.com/lab/ake-hosted" />
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --panel: #121829;
+      --border: #2a3555;
+      --text: #e8ecf8;
+      --muted: #9aa8c7;
+      --accent: #7c6cff;
+      --cyan: #22d3ee;
+      --ok: #3ecf8e;
+      --err: #ff6b8a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, #1a1240 0%, transparent 55%), var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(18, 24, 41, 0.9);
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; }
+    header h1 span { color: var(--accent); }
+    .meta { font-size: 0.8rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.4; }
+    main { flex: 1; display: flex; flex-direction: column; max-width: 52rem; width: 100%; margin: 0 auto; min-height: 0; }
+    #setup, #chat { flex: 1; display: flex; flex-direction: column; padding: 1rem 1.25rem; min-height: 0; }
+    #chat { display: none; }
+    label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.35rem; }
+    input, textarea {
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      font: inherit;
+      margin-bottom: 0.85rem;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.65rem 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .err-box {
+      background: rgba(255, 107, 138, 0.12);
+      border: 1px solid rgba(255, 107, 138, 0.35);
+      color: #ffb4c4;
+      padding: 0.75rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 0.85rem;
+      display: none;
+    }
+    #messages { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.65rem; padding-bottom: 0.75rem; }
+    .msg { max-width: 92%; padding: 0.7rem 0.9rem; border-radius: 12px; line-height: 1.45; font-size: 0.92rem; white-space: pre-wrap; }
+    .msg.user { align-self: flex-end; background: rgba(34, 211, 238, 0.12); border: 1px solid var(--border); }
+    .msg.ake { align-self: flex-start; background: rgba(124, 108, 255, 0.18); border: 1px solid var(--border); }
+    .msg.system { align-self: center; font-size: 0.8rem; color: var(--muted); background: transparent; }
+    .composer { border-top: 1px solid var(--border); padding-top: 0.75rem; }
+    .row { display: flex; gap: 0.5rem; }
+    .row textarea { margin-bottom: 0; flex: 1; resize: vertical; min-height: 2.5rem; }
+    #modeChip {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--cyan);
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span>Ake</span> · Hosted Chat · S² Gateway</h1>
+    <p class="meta">
+      Production path: <strong>/api/public/chat-with-context</strong> on this host.
+      $29 hosted → Ollama <code>s2-ake</code> · $9 gateway → your Groq + server RAG · Free BYOK → Groq only.
+    </p>
+    <div id="modeChip" hidden></div>
+  </header>
+  <main>
+    <section id="setup">
+      <label for="email">Subscription email</label>
+      <input id="email" type="email" autocomplete="email" placeholder="Same email as Stripe checkout (owner ID)" />
+      <label for="groq">Groq API key (optional enhancement)</label>
+      <input id="groq" type="password" autocomplete="off" placeholder="gsk_… — Groq + RAG or Ollama → Groq fallback" />
+      <div id="setupErr" class="err-box"></div>
+      <button type="button" id="continueBtn">Continue to chat</button>
+    </section>
+    <section id="chat">
+      <div id="messages" role="log" aria-live="polite"></div>
+      <div class="composer">
+        <div class="row">
+          <textarea id="input" rows="2" placeholder="Message Ake…"></textarea>
+          <button type="button" id="send">Send</button>
+        </div>
+        <div style="margin-top:0.5rem;display:flex;flex-wrap:wrap;gap:0.4rem;align-items:center">
+          <button type="button" class="secondary" data-mode="hosted">Ollama</button>
+          <button type="button" class="secondary" data-mode="groq">Groq + RAG</button>
+          <button type="button" class="secondary" data-mode="fallback">Ollama → Groq</button>
+          <button type="button" class="secondary" id="backSetup">Change access</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    const BILLING_URL = "https://billing.s2artslab.com";
+    const GATEWAY_PRODUCTS = new Set([
+      "s2-gateway-single", "psla-gateway",
+      "s2-hosted-single", "s2-hosted-ecosystem", "psla-hosted",
+    ]);
+    const FULL_HOSTED = new Set(["s2-hosted-single", "s2-hosted-ecosystem", "psla-hosted"]);
+    const GATEWAY_TIER = new Set(["s2-gateway-single", "psla-gateway"]);
+    const HUB_APP = "s2-ecosystem-v2";
+    const NEVER_ENDING = new Set(["s2artslab@gmail.com"]);
+
+    const emailEl = document.getElementById("email");
+    const groqEl = document.getElementById("groq");
+    const setupEl = document.getElementById("setup");
+    const chatEl = document.getElementById("chat");
+    const setupErr = document.getElementById("setupErr");
+    const messagesEl = document.getElementById("messages");
+    const inputEl = document.getElementById("input");
+    const modeChip = document.getElementById("modeChip");
+
+    let route = null;
+    let selectedMode = "hosted";
+    const history = [];
+
+    function neverEndingEnt() {
+      return {
+        active: true,
+        tier: "entry",
+        status: "active",
+        productId: "s2-hosted-ecosystem",
+        inferenceScope: "ecosystem",
+        inferenceKind: "ollama",
+        includesHostedInference: true,
+        allowedApps: [],
+      };
+    }
+
+    function ownerId(email) {
+      return String(email || "").trim().toLowerCase();
+    }
+
+    function loadSaved() {
+      try {
+        const e = localStorage.getItem("ake_hub_email");
+        const g = localStorage.getItem("ake_hub_groq");
+        if (e) emailEl.value = e;
+        if (g) groqEl.value = g;
+      } catch (_) {}
+    }
+
+    function saveCreds() {
+      try {
+        localStorage.setItem("ake_hub_email", emailEl.value.trim().toLowerCase());
+        if (groqEl.value.trim()) localStorage.setItem("ake_hub_groq", groqEl.value.trim());
+      } catch (_) {}
+    }
+
+    function scopeAllows(ent, appId) {
+      if (ent.inferenceScope === "ecosystem") {
+        const allowed = ent.allowedApps || [];
+        return !allowed.length || allowed.includes(appId);
+      }
+      if (ent.boundApp) return ent.boundApp === appId;
+      const allowed = ent.allowedApps || [];
+      if (allowed.length) return allowed.includes(appId);
+      return false;
+    }
+
+    function isGatewayEnt(ent) {
+      if (!ent.active) return false;
+      if (ent.inferenceKind === "gateway" || ent.tier === "gateway") return true;
+      return GATEWAY_TIER.has(ent.productId);
+    }
+
+    function isFullHosted(ent) {
+      if (!ent.active || isGatewayEnt(ent)) return false;
+      if (ent.inferenceKind === "ollama") return true;
+      return FULL_HOSTED.has(ent.productId);
+    }
+
+    async function fetchBilling(id) {
+      const res = await fetch(BILLING_URL + "/api/billing/status?ownerId=" + encodeURIComponent(id));
+      const text = await res.text();
+      return JSON.parse(text || "{}");
+    }
+
+    async function resolveRoute() {
+      const email = ownerId(emailEl.value);
+      const groq = groqEl.value.trim();
+      if (!email && !groq) {
+        return { error: "Enter subscription email and/or Groq API key." };
+      }
+      let ent = { active: false, tier: "none", status: "none" };
+      if (email) {
+        try {
+          ent = await fetchBilling(email);
+        } catch (e) {
+          if (!groq && !NEVER_ENDING.has(email)) {
+            return { error: "Could not verify subscription: " + e.message };
+          }
+        }
+        if (NEVER_ENDING.has(email)) ent = { ...neverEndingEnt(), ...ent, active: true };
+      }
+      if (isFullHosted(ent) && scopeAllows(ent, HUB_APP)) {
+        return {
+          mode: "hosted",
+          ownerId: email,
+          productId: ent.productId || "s2-hosted-single",
+          label: "Production Ollama (s2-ake)",
+        };
+      }
+      if (isGatewayEnt(ent)) {
+        if (!groq) {
+          return { error: "$9 gateway plan requires your Groq API key (server RAG, not Ollama)." };
+        }
+        if (!scopeAllows(ent, HUB_APP)) {
+          return { error: "Gateway subscription is not bound to Community Hub. Use ecosystem hosted or Pro Se Legal." };
+        }
+        return {
+          mode: "groq",
+          ownerId: email,
+          productId: ent.productId || "s2-gateway-single",
+          label: "Gateway + Groq ($9, server RAG)",
+        };
+      }
+      if (groq) {
+        return { mode: "groq", ownerId: email || null, label: "BYOK Groq via gateway" };
+      }
+      if (ent.active) {
+        return { error: "Subscription found but not entitled for hub chat. Add Groq key or upgrade plan." };
+      }
+      return {
+        error: "Add $29 hosted email, $9 gateway email + Groq key, or a Groq key for free BYOK.",
+      };
+    }
+
+    function append(role, text, meta) {
+      const div = document.createElement("div");
+      div.className = "msg " + role;
+      div.textContent = text;
+      if (meta) {
+        const m = document.createElement("div");
+        m.style.fontSize = "0.72rem";
+        m.style.color = "var(--muted)";
+        m.style.marginTop = "0.35rem";
+        m.textContent = meta;
+        div.appendChild(m);
+      }
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function headersForRoute(r, mode) {
+      const h = { "Content-Type": "application/json" };
+      const groq = groqEl.value.trim();
+      const useHosted = mode === "hosted" || (mode === "fallback" && r._tryHosted !== false);
+      if (useHosted) {
+        h["X-S2-Inference"] = "hosted";
+        h["X-Owner-Id"] = r.ownerId;
+        h["X-S2-Product-Id"] = r.productId;
+      } else {
+        h["X-Groq-Api-Key"] = groq;
+        h["X-S2-Inference"] = "groq";
+        if (r.ownerId) {
+          h["X-Owner-Id"] = r.ownerId;
+          if (r.productId) h["X-S2-Product-Id"] = r.productId;
+        }
+      }
+      return h;
+    }
+
+    async function postChat(mode) {
+      const text = inputEl.value.trim();
+      const res = await fetch("/api/public/chat-with-context", {
+        method: "POST",
+        headers: headersForRoute(route, mode),
+        body: JSON.stringify({
+          user_message: text,
+          history: history.slice(),
+          context: "general",
+          max_tokens: 1024,
+          temperature: 0.2,
+          rag_limit: 5,
+        }),
+      });
+      const raw = await res.text();
+      let data = {};
+      try { data = JSON.parse(raw || "{}"); } catch (_) {
+        throw new Error("Invalid response: " + raw.slice(0, 120));
+      }
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || "HTTP " + res.status);
+      }
+      return data;
+    }
+
+    async function send() {
+      const text = inputEl.value.trim();
+      if (!text || !route) return;
+      inputEl.value = "";
+      append("user", text);
+      const thinking = document.createElement("div");
+      thinking.className = "msg system";
+      thinking.textContent = "Ake is thinking…";
+      messagesEl.appendChild(thinking);
+      document.getElementById("send").disabled = true;
+      try {
+        let data;
+        let meta = "";
+        try {
+          data = await postChat(selectedMode === "fallback" ? "hosted" : selectedMode);
+        } catch (hostedErr) {
+          if (selectedMode === "fallback" && groqEl.value.trim()) {
+            data = await postChat("groq");
+            meta = "fallback: Groq · ";
+          } else {
+            throw hostedErr;
+          }
+        }
+        thinking.remove();
+        history.push({ role: "user", content: text });
+        history.push({ role: "assistant", content: data.content });
+        append("ake", data.content, meta + [data.source, data.rag_used ? "RAG" : ""].filter(Boolean).join(" · "));
+      } catch (e) {
+        thinking.remove();
+        append("system", e.message || String(e));
+      } finally {
+        document.getElementById("send").disabled = false;
+      }
+    }
+
+    document.getElementById("continueBtn").addEventListener("click", async () => {
+      setupErr.style.display = "none";
+      saveCreds();
+      route = await resolveRoute();
+      selectedMode = route.mode === "groq" ? "groq" : "hosted";
+      if (route.error) {
+        setupErr.textContent = route.error;
+        setupErr.style.display = "block";
+        return;
+      }
+      modeChip.hidden = false;
+      modeChip.textContent = route.label;
+      setupEl.style.display = "none";
+      chatEl.style.display = "flex";
+      messagesEl.innerHTML = "";
+      append("system", "Deep Key opens at the threshold.");
+      append("ake", "I am the S² Assistant. " + route.label + ". How can I help?");
+    });
+
+    document.getElementById("backSetup").addEventListener("click", () => {
+      chatEl.style.display = "none";
+      setupEl.style.display = "block";
+      modeChip.hidden = true;
+      route = null;
+    });
+
+    document.querySelectorAll("[data-mode]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedMode = btn.getAttribute("data-mode");
+        modeChip.textContent =
+          selectedMode === "hosted"
+            ? "Production Ollama (s2-ake)"
+            : selectedMode === "groq"
+              ? "Groq + server RAG"
+              : "Ollama → Groq fallback";
+      });
+    });
+
+    document.getElementById("send").addEventListener("click", send);
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+
+    loadSaved();
+  </script>
+</body>
+</html>

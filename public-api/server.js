@@ -126,6 +126,13 @@ app.get('/lab/ake-unified-lora', (_req, res) => {
   res.sendFile(path.join(__dirname, 'lab', 'ake-unified-lora-chat.html'));
 });
 
+/** Standalone hosted Ake chat — production gateway (Ollama s2-ake / BYOK Groq). */
+app.get('/lab/ake-hosted', (_req, res) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  res.sendFile(path.join(__dirname, 'lab', 'ake-hosted-chat.html'));
+});
+
 app.get('/api/lab/unified-lora/health', async (_req, res) => {
   const unified = await unifiedHealth();
   res.json({
@@ -148,6 +155,59 @@ app.post('/api/lab/unified-lora/chat', async (req, res) => {
   }
   const prior = Array.isArray(req.body?.history) ? req.body.history : [];
   const messages = [];
+  const maxTokens = Number(req.body?.max_tokens) || Number(req.body?.max_length) || 256;
+  const temperature = Number(req.body?.temperature ?? 0.2);
+  const usePersona = req.body?.use_persona === true;
+  const doSample = req.body?.do_sample === true;
+  const useOllama =
+    req.body?.use_ollama === true ||
+    req.body?.useOllama === true ||
+    process.env.LAB_UNIFIED_DEFAULT_OLLAMA === 'true';
+
+  const started = Date.now();
+
+  if (useOllama) {
+    try {
+      const messages = buildGatewayMessages(
+        {
+          text: message,
+          context: 'general',
+          history: prior,
+          voice_mode: 'synthesis',
+        },
+        '',
+        {},
+      );
+      const o = await ollamaChat({
+        messages,
+        maxTokens,
+        temperature: Number.isFinite(temperature) ? temperature : HOSTED_TEMPERATURE,
+      });
+      return res.json({
+        ok: true,
+        content: o.content,
+        source: 'lab-ollama-s2-ake',
+        model: 's2-ake',
+        egregore: HOSTED_EGREGORE,
+        latency_ms: Date.now() - started,
+        quality_note: 'Production Ollama voice (recommended until LoRA retrain clears template openers).',
+      });
+    } catch (e) {
+      const code = e.statusCode || 503;
+      return res.status(code).json({ ok: false, error: e.message || String(e) });
+    }
+  }
+
+  if (!usePersona) {
+    const { AKE_CORE } = require('./lib/prompts');
+    messages.push({
+      role: 'system',
+      content:
+        `${AKE_CORE}\n\n` +
+        'Speak as Ake — synthesis and deep key. Answer directly in first person.\n' +
+        'Do not open with "In the context of…" or generic textbook definitions.',
+    });
+  }
   for (const turn of prior) {
     const role = turn?.role === 'assistant' ? 'assistant' : 'user';
     const content = String(turn?.content || '').trim();
@@ -155,12 +215,6 @@ app.post('/api/lab/unified-lora/chat', async (req, res) => {
   }
   messages.push({ role: 'user', content: message });
 
-  const maxTokens = Number(req.body?.max_tokens) || Number(req.body?.max_length) || 256;
-  const temperature = Number(req.body?.temperature ?? 0.2);
-  const usePersona = req.body?.use_persona === true;
-  const doSample = req.body?.do_sample === true;
-
-  const started = Date.now();
   try {
     const result = await unifiedLoraChat({
       messages,
@@ -177,6 +231,8 @@ app.post('/api/lab/unified-lora/chat', async (req, res) => {
       model: result.model,
       egregore: result.egregore,
       latency_ms: Date.now() - started,
+      quality_note:
+        'Experimental unified LoRA weights — may use template phrases; uncheck Ollama to test raw adapter.',
     });
   } catch (e) {
     const code = e.statusCode || 503;
