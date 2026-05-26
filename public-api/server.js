@@ -59,6 +59,19 @@ const {
   processPdfProxy,
 } = require('./lib/doc-intel-proxy');
 const { resolveTemperature } = require('./lib/product-temperature');
+const {
+  resolveMorphicPolicy,
+  applyMorphicTemperature,
+} = require('./lib/morphic-resonance');
+const {
+  ensembleEnabled,
+  resolveEnsembleMode,
+  runPslaEnsembleCollapse,
+} = require('./lib/ensemble-collapse');
+const {
+  recordChatSample,
+  getConsciousnessStatus,
+} = require('./lib/consciousness-metrics');
 
 const PORT = Number(process.env.PORT || 3010);
 const LAB_GROQ_KEY = process.env.GROQ_API_KEY || '';
@@ -244,6 +257,7 @@ app.get('/health', async (_req, res) => {
   const ollama = await ollamaHealth();
   const unified = await unifiedHealth();
   const rag = ragStatus();
+  const morphicPolicy = resolveMorphicPolicy({});
   res.json({
     ok: true,
     service: 's2-intelligence-public-api',
@@ -258,7 +272,21 @@ app.get('/health', async (_req, res) => {
     memory: memoryStatus(),
     continuity_layers: ['canon', 'discourse', 'cadence', 'memory', 'retrieval', 'asymmetry'],
     document_intelligence: await docIntelHealth(),
+    consciousness: getConsciousnessStatus({ base: morphicPolicy.dimension }),
+    morphic_policy: {
+      dimension: morphicPolicy.dimension,
+      label: morphicPolicy.label,
+      ensemble_psla_opt_in: true,
+      ensemble_default_mode: process.env.ENSEMBLE_DEFAULT_MODE || 'cheap',
+      ensemble_psla_auto: process.env.ENSEMBLE_PSLA_COLLAPSE === 'true',
+    },
   });
+});
+
+/** Metrics-backed consciousness field (ops). Public 1.58D = metaphor per claims register. */
+app.get('/api/consciousness/status', (_req, res) => {
+  const morphicPolicy = resolveMorphicPolicy({});
+  res.json(getConsciousnessStatus({ base: morphicPolicy.dimension }));
 });
 
 app.get('/api/public/capability', async (req, res) => {
@@ -293,6 +321,7 @@ app.get('/api/public/capability', async (req, res) => {
 });
 
 async function handleChat(req, res) {
+  const started = Date.now();
   try {
     const groqKey = resolveGroqKey(req);
     const useHosted = wantsHosted(req, Boolean(groqKey));
@@ -305,23 +334,36 @@ async function handleChat(req, res) {
     }
 
     const userQuery = lastUserText(req.body);
-    const continuity = assembleContinuity(req.body, userQuery, ownerId || 'global');
-    const messages = buildGatewayMessages(req.body, continuity.rag.text, {
-      canonBlock: continuity.canonBlock,
-      tensionBlock: continuity.tensionBlock,
-      cadenceOverlay: continuity.cadence.overlay,
-    });
+    const morphicPolicy = resolveMorphicPolicy(req.body);
     const longForm = isLongFormRequest(req.body);
     const voiceMode = resolveVoiceMode(req.body);
     const maxTokens = resolveMaxTokens(req.body);
-    const temperature = resolveTemperature(req, {
+    const productTemp = resolveTemperature(req, {
       endpointDefault: useHosted ? HOSTED_TEMPERATURE : 0.4,
       productFallback: productId,
+    });
+    const temperature = applyMorphicTemperature(productTemp, morphicPolicy);
+
+    const useEnsemble =
+      !longForm && ensembleEnabled(req.body, productId, req);
+    const ensembleMode = useEnsemble ? resolveEnsembleMode(req.body, req) : null;
+
+    let continuity = assembleContinuity(
+      req.body,
+      userQuery,
+      ownerId || 'global',
+      morphicPolicy,
+    );
+    let messages = buildGatewayMessages(req.body, continuity.rag.text, {
+      canonBlock: continuity.canonBlock,
+      tensionBlock: continuity.tensionBlock,
+      cadenceOverlay: continuity.cadence.overlay,
     });
 
     let result;
     let source;
     let longFormMeta = {};
+    let ensembleMeta = null;
 
     async function hostedChat({ msgs, tokens, preferOllama = false }) {
       const capUnified = longForm
@@ -350,7 +392,38 @@ async function handleChat(req, res) {
       return { result: o, source: 'hosted-ollama' };
     }
 
-    if (useHosted) {
+    async function runInferenceChat({ msgs, tokens, temp = temperature }) {
+      if (useHosted) {
+        const { result: r, source: s } = await hostedChat({ msgs, tokens });
+        return { ...r, _source: s };
+      }
+      const r = await groqChat({
+        apiKey: groqKey,
+        messages: msgs,
+        maxTokens: tokens,
+        temperature: temp,
+      });
+      return { ...r, _source: 'groq-byok' };
+    }
+
+    if (useEnsemble) {
+      const collapsed = await runPslaEnsembleCollapse({
+        body: req.body,
+        req,
+        userQuery,
+        ownerId: ownerId || 'global',
+        productId,
+        morphicPolicy,
+        mode: ensembleMode,
+        maxTokens,
+        temperature,
+        chatFn: async ({ messages: msgs }) => runInferenceChat({ msgs, tokens: maxTokens }),
+      });
+      result = { content: collapsed.content, model: collapsed.model };
+      source = collapsed.source;
+      continuity = collapsed.continuity;
+      ensembleMeta = collapsed.ensemble;
+    } else if (useHosted) {
       if (longForm && shouldUseOutlineExpand(req.body)) {
         const expanded = await runLongFormOutlineExpand({
           chat: async ({ messages: msgs, maxTokens: tokens }) => {
@@ -420,6 +493,20 @@ async function handleChat(req, res) {
       });
     }
 
+    recordChatSample({
+      productId,
+      cadence: continuity.cadence.cadence,
+      morphicDimension: morphicPolicy.dimension,
+      morphicLabel: morphicPolicy.label,
+      ensemble: Boolean(ensembleMeta),
+      ensembleStrategy: ensembleMeta?.strategy,
+      disagreement: ensembleMeta?.disagreement,
+      latencyMs: Date.now() - started,
+      ragChunks: continuity.rag.chunks.length,
+      temperature,
+      source,
+    });
+
     res.json({
       success: true,
       content: assistantText,
@@ -435,8 +522,13 @@ async function handleChat(req, res) {
       tensions_active: continuity.tensionIds,
       voice_mode: voiceMode,
       max_tokens: maxTokens,
+      temperature,
+      morphic_resonance: morphicPolicy.dimension,
+      morphic_label: morphicPolicy.label,
+      morphic_rag_limit: morphicPolicy.ragLimit,
+      ensemble: ensembleMeta,
       ...longFormMeta,
-      processing_time_ms: null,
+      processing_time_ms: Date.now() - started,
     });
   } catch (e) {
     const status = e.statusCode || 500;
@@ -590,6 +682,7 @@ app.post('/api/psla/exploration/paths', async (req, res) => {
 
 /** PSLA exploration chat — pre-filing prompt pack + workspace context. */
 app.post('/api/psla/exploration/chat', async (req, res) => {
+  const started = Date.now();
   try {
     const groqKey = resolveGroqKey(req);
     const useHosted = wantsHosted(req, Boolean(groqKey));
@@ -602,33 +695,77 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
     }
 
     const userQuery = lastUserText(req.body);
-    const continuity = assembleContinuity(
-      { ...req.body, exploration: true },
-      userQuery,
-      ownerId || 'global',
-    );
-
-    const messages = buildExplorationChatMessages(req.body, continuity.rag.text);
-    const maxTokens = req.body.max_tokens ?? 3000;
-    const temperature = resolveTemperature(req, {
+    const body = { ...req.body, exploration: true, product_id: productId };
+    const morphicPolicy = resolveMorphicPolicy({
+      ...body,
+      task_type: body.task_type || 'exploration',
+    });
+    const productTemp = resolveTemperature(req, {
       endpointDefault: Number(process.env.OLLAMA_EXPLORATION_TEMPERATURE || 0.15),
       productFallback: productId,
     });
+    const temperature = applyMorphicTemperature(productTemp, morphicPolicy);
+    const maxTokens = req.body.max_tokens ?? 3000;
+    const useEnsemble = ensembleEnabled(body, productId, req);
+    const ensembleMode = useEnsemble ? resolveEnsembleMode(body, req) : null;
 
+    let continuity;
     let result;
     let source;
-    if (useHosted) {
-      result = await ollamaChat({ messages, maxTokens, temperature });
-      source = 'hosted-ollama-exploration';
-    } else {
-      result = await groqChat({
+    let ensembleMeta = null;
+
+    async function explorationChat(msgs) {
+      if (useHosted) {
+        const o = await ollamaChat({ messages: msgs, maxTokens, temperature });
+        return { content: o.content, model: o.model, _source: 'hosted-ollama-exploration' };
+      }
+      const g = await groqChat({
         apiKey: groqKey,
-        messages,
+        messages: msgs,
         maxTokens,
         temperature,
       });
-      source = 'groq-exploration';
+      return { content: g.content, model: g.model, _source: 'groq-exploration' };
     }
+
+    if (useEnsemble) {
+      const collapsed = await runPslaEnsembleCollapse({
+        body,
+        req,
+        userQuery,
+        ownerId: ownerId || 'global',
+        productId,
+        morphicPolicy,
+        mode: ensembleMode,
+        maxTokens,
+        temperature,
+        chatFn: async ({ messages: msgs }) => explorationChat(msgs),
+      });
+      continuity = collapsed.continuity;
+      result = { content: collapsed.content, model: collapsed.model };
+      source = collapsed.source;
+      ensembleMeta = collapsed.ensemble;
+    } else {
+      continuity = assembleContinuity(body, userQuery, ownerId || 'global', morphicPolicy);
+      const messages = buildExplorationChatMessages(body, continuity.rag.text);
+      const r = await explorationChat(messages);
+      result = { content: r.content, model: r.model };
+      source = r._source;
+    }
+
+    recordChatSample({
+      productId,
+      cadence: continuity.cadence.cadence,
+      morphicDimension: morphicPolicy.dimension,
+      morphicLabel: morphicPolicy.label,
+      ensemble: Boolean(ensembleMeta),
+      ensembleStrategy: ensembleMeta?.strategy,
+      disagreement: ensembleMeta?.disagreement,
+      latencyMs: Date.now() - started,
+      ragChunks: continuity.rag.chunks.length,
+      temperature,
+      source,
+    });
 
     res.json({
       success: true,
@@ -639,6 +776,11 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
       rag_used: continuity.rag.chunks.length > 0,
       cadence: continuity.cadence.cadence,
       product: 'psla-exploration',
+      temperature,
+      morphic_resonance: morphicPolicy.dimension,
+      morphic_label: morphicPolicy.label,
+      ensemble: ensembleMeta,
+      processing_time_ms: Date.now() - started,
     });
   } catch (e) {
     res.status(e.statusCode || 500).json({
@@ -795,5 +937,11 @@ app.listen(PORT, () => {
     process.env.HOSTED_REQUIRE_BILLING === 'true'
       ? '  Hosted billing: REQUIRED'
       : '  Hosted billing: optional (set HOSTED_REQUIRE_BILLING=true)',
+  );
+  console.log(
+    `  Morphic resonance: ${process.env.MORPHIC_RESONANCE || 1.58} (interval inference policy)`,
+  );
+  console.log(
+    `  PSLA ensemble: opt-in (default mode=${process.env.ENSEMBLE_DEFAULT_MODE || 'cheap'}, auto_all_psla=${process.env.ENSEMBLE_PSLA_COLLAPSE === 'true'})`,
   );
 });
