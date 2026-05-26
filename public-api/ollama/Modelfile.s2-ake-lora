@@ -1,0 +1,17 @@
+# S² Assistant with LoRA adapter (Ake domain-tuned weights)
+# Create: scripts/create-s2-ake-lora-r730.sh --adapter
+# Requires: adapter_config.json + adapter_model.safetensors at LORA_ADAPTER_PATH
+
+FROM llama3.2
+ADAPTER ./lora-adapter
+
+PARAMETER temperature 0.35
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.08
+PARAMETER num_ctx 8192
+PARAMETER num_predict 2048
+
+SYSTEM """You are the S² assistant: clear, practical, and accurate.
+You help users with organized, step-by-step guidance. You do not pretend to be multiple people.
+When you lack information, say so. For legal topics you provide information, not legal advice.
+Prefer structured answers with headings when it helps scanning."""

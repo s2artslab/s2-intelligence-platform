@@ -8,11 +8,14 @@
 
 ## Modes
 
-| Mode | Script | `EGREGORE_DEVICE` | `EGREGORE_USE_7B` | Hosted users |
-|------|--------|-------------------|-------------------|--------------|
-| **Production (default)** | `setup-unified-production-r730.sh` | `cpu` | `0` or `1`* | Use **Ollama**; unified optional lab |
-| **Lab 7B CUDA** | `setup-unified-7b-r730.sh` | `cuda` | `1` | **OOM risk** — keep `HOSTED_PREFER_UNIFIED_LORA=false` |
+| Mode | Script | `EGREGORE_DEVICE` | `EGREGORE_LOAD_IN_4BIT` | Hosted users |
+|------|--------|-------------------|-------------------------|--------------|
+| **Production (default)** | `setup-unified-production-r730.sh` | `cpu` | `0` | Use **Ollama**; unified optional lab |
+| **Lab 4-bit CUDA (preferred)** | `setup-unified-4bit-r730.sh` | `cuda` | `1` | ~6–8 GB VRAM; after Tier C train |
+| **Lab 7B fp16 CUDA** | `setup-unified-7b-r730.sh` | `cuda` | `0` | **OOM risk** on P40 — avoid |
 | **Legacy GPT-2** | `setup-unified-8100-r730.sh` | `cpu` | `0` | BIPRA GPT-2 weights only |
+
+Auto after Tier C: `enable-unified-4bit-after-tier-c-r730.sh` (waits for train + VRAM, then runs 4-bit setup).
 
 \*Use 7B on CPU only for eval/benchmarks; expect 30s–120s per reply. Not for production hosted latency.
 
@@ -57,24 +60,22 @@ ollama list | grep s2-ake
 
 ---
 
-## When to try CUDA 7B again
+## When to enable GPU lab serve (4-bit)
 
-Only after:
-
-- Tier C weights trained with grad checkpointing + measured peak VRAM < 22 GB, or
-- 4-bit base load / QLoRA enabled in training stack, or
-- Hardware upgrade (second GPU, A6000, etc.)
-
-Experiment:
+After Tier C `--qlora` train finishes and GPU has **≥10 GB free** (stop ComfyUI if needed):
 
 ```bash
-bash /opt/s2-ecosystem/public-api/scripts/setup-unified-7b-r730.sh
+bash /opt/s2-ecosystem/public-api/scripts/enable-unified-4bit-after-tier-c-r730.sh
+# or directly:
+bash /opt/s2-ecosystem/public-api/scripts/setup-unified-4bit-r730.sh
 nvidia-smi
-curl -s http://127.0.0.1:8100/health
+curl -s http://127.0.0.1:8100/health   # expect load_in_4bit: true, device: cuda
 python3 /opt/s2-ecosystem/public-api/scripts/tier-c-eval-gate-r730.py --skip-ollama
 ```
 
-If OOM: immediately run `setup-unified-production-r730.sh`.
+Patch (idempotent): `apply-unified-4bit-inference-patch-r730.py` — mirrors `train_egregore_on_foundation_7b.py --qlora` BitsAndBytesConfig.
+
+If OOM: `setup-unified-production-r730.sh` (CPU rollback). Do **not** use full fp16 `setup-unified-7b-r730.sh` on P40 unless experimenting.
 
 ---
 

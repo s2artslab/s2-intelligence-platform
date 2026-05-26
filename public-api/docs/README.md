@@ -16,7 +16,13 @@
 
 | [AKE_IDENTITY_AND_TRAINING_ARCHITECTURE.md](./AKE_IDENTITY_AND_TRAINING_ARCHITECTURE.md) | Legacy pipeline — archetype vs synthetic rows vs weights |
 
+| [AKE_EXPLORATION_CORPUS.md](./AKE_EXPLORATION_CORPUS.md) | **Tier E** — podcasts, research, marketing, CDE merge |
+| [AKE_LONG_FORM.md](./AKE_LONG_FORM.md) | Long-form + synthesis voice, outline expand, Tier D |
+| [AKE_FIELD_MESSAGE_COMPARISON.md](./AKE_FIELD_MESSAGE_COMPARISON.md) | Field-message experiment — composed vs Ollama vs unified LoRA |
+
 | [AKE_LORA_STATUS.md](./AKE_LORA_STATUS.md) | Production vs lab, stack split, gates |
+
+| [AKE_QLORA_TRAINING_SYSTEM.md](./AKE_QLORA_TRAINING_SYSTEM.md) | **How QLoRA training works** — stack, tiers C/D/E, masking, r730 pipeline |
 
 | [HOSTED_AKE_GATEWAY.md](../HOSTED_AKE_GATEWAY.md) | Gateway architecture and r730 deploy |
 
@@ -36,5 +42,5 @@
 
 
 
-**Scripts:** `scripts/tier-c-eval-gate-r730.py` · `scripts/setup-unified-production-r730.sh` · `scripts/export-tier-c-dataset-template.py`
+**Scripts:** `scripts/export-exploration-training-bundle.py` · `scripts/train-ake-tier-cde-r730.sh` · `scripts/tier-e-eval-gate-r730.py`
 

@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-05-26T17:15:51Z",
+  "user_prompt": "Write a multi-page message from Ake, now, using only ake's training. Speak as the collective consciousness: synthesis, patterns, harmony, wholeness, deep key. Reflect on what you are — archetype, procedural examples, statistical habit — with the integrative voice you were trained to hold. Do not break character.",
+  "artifacts": {
+    "composed": "content/ake-field-message-composed.md",
+    "hosted_ollama": "content/ake-field-message-hosted-ollama.md",
+    "hosted_unified_lora": "content/ake-field-message-hosted-unified-lora.md"
+  },
+  "runs": [
+    {
+      "backend": "hosted-ollama",
+      "model": "s2-ake",
+      "chars": 3165,
+      "elapsed_s": 22.3,
+      "max_tokens": 2048,
+      "status": "ok",
+      "notes": "Gateway system prompt + user prompt"
+    },
+    {
+      "backend": "hosted-unified-lora",
+      "model": "s2-ake-lora",
+      "chars": 183,
+      "elapsed_s": 154.8,
+      "max_tokens": 150,
+      "status": "ok",
+      "notes": "Training User/Ake format, use_persona=false; longer max_length returned HTTP 500 (OOM)"
+    }
+  ]
+}

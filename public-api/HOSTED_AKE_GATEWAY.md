@@ -25,6 +25,8 @@ flowchart LR
 
 Apps must **not** call Ollama directly when `USE_HOSTED_GATEWAY=true` (PSLA production default).
 
+**Production inference today:** Ollama **`s2-ake`** only. Unified LoRA (`:8100`) is lab until [docs/TIER_C_RETRAIN_RUNBOOK.md](./docs/TIER_C_RETRAIN_RUNBOOK.md) eval gate passes — see [docs/AKE_LORA_STATUS.md](./docs/AKE_LORA_STATUS.md).
+
 ## Phases (implemented)
 
 ### Phase 1 — Gateway
@@ -111,7 +113,11 @@ systemctl enable --now s2-public-api
 curl http://127.0.0.1:3020/health
 ```
 
-Env: `HOSTED_PREFER_UNIFIED_LORA=true`, `UNIFIED_EGREGORE_URL=http://127.0.0.1:8100`
+Env (production): `HOSTED_PREFER_UNIFIED_LORA=false`, `UNIFIED_EGREGORE_URL=http://127.0.0.1:8100` (lab/benchmarks).
+
+After Tier C: `HOSTED_PREFER_UNIFIED_LORA=true` only when [scripts/tier-c-eval-gate-r730.py](./scripts/tier-c-eval-gate-r730.py) exits 0.
+
+Safe unified mode on P40 (avoids CUDA OOM): `bash scripts/setup-unified-production-r730.sh` — [docs/R730_UNIFIED_MEMORY_PLAN.md](./docs/R730_UNIFIED_MEMORY_PLAN.md).
 
 Optional Ollama merge (`s2-ake-lora` on Llama 3.2) only after **7B** Ake weights exist — see **[docs/LORA_TO_OLLAMA.md](./docs/LORA_TO_OLLAMA.md)**.
 

@@ -1,0 +1,15 @@
+[Unit]
+Description=S2 Intelligence Public API (Ake hosted gateway)
+After=network.target unified-egregore.service ollama.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/s2-ecosystem/public-api
+EnvironmentFile=/opt/s2-ecosystem/public-api/.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

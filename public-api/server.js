@@ -30,7 +30,17 @@ const { buildCorsMiddleware } = require('./lib/cors-config');
 const { groqChat } = require('./lib/groq');
 const { ollamaChat, ollamaHealth } = require('./lib/ollama');
 const { unifiedLoraChat, unifiedHealth } = require('./lib/unified-lora');
-const { buildGatewayMessages } = require('./lib/prompts');
+const {
+  buildGatewayMessages,
+  isLongFormRequest,
+  resolveMaxTokens,
+  resolveVoiceMode,
+} = require('./lib/prompts');
+const {
+  shouldUseOutlineExpand,
+  runLongFormOutlineExpand,
+  runLongFormSingleShot,
+} = require('./lib/long-form');
 const { retrieveContext, ragStatus } = require('./lib/rag');
 const { assembleContinuity } = require('./lib/continuity');
 const { canonStatus } = require('./lib/canon');
@@ -56,10 +66,18 @@ const DEFAULT_PRODUCT = process.env.BILLING_PRODUCT_ID || 'psla-hosted';
 const PREFER_UNIFIED_LORA = process.env.HOSTED_PREFER_UNIFIED_LORA === 'true';
 const HOSTED_EGREGORE = process.env.HOSTED_EGREGORE_ID || 'ake';
 const HOSTED_TEMPERATURE = Number(process.env.OLLAMA_HOSTED_TEMPERATURE || process.env.OLLAMA_TEMPERATURE || 0.2);
+const LONG_FORM_PREFER_OLLAMA = process.env.HOSTED_LONG_FORM_PREFER_OLLAMA !== 'false';
+const UNIFIED_LONG_FORM_MAX_TOKENS = Number(process.env.UNIFIED_LONG_FORM_MAX_TOKENS || 512);
+const LAB_UNIFIED_CHAT =
+  process.env.LAB_UNIFIED_CHAT === 'true' || process.env.LAB_HOSTED_UNLOCK === 'true';
 
 const app = express();
 app.use(buildCorsMiddleware());
 app.use(express.json({ limit: '8mb' }));
+
+app.get('/favicon.ico', (_req, res) => {
+  res.status(204).end();
+});
 
 function resolveGroqKey(req) {
   const header =
@@ -100,6 +118,71 @@ function ownerIdFrom(req) {
     ''
   ).trim();
 }
+
+/** Standalone lab UI — direct unified LoRA (:8100), not production hosted Ollama. */
+app.get('/lab/ake-unified-lora', (_req, res) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
+  res.sendFile(path.join(__dirname, 'lab', 'ake-unified-lora-chat.html'));
+});
+
+app.get('/api/lab/unified-lora/health', async (_req, res) => {
+  const unified = await unifiedHealth();
+  res.json({
+    ok: unified.ok,
+    lab_enabled: LAB_UNIFIED_CHAT,
+    unified_lora: unified,
+  });
+});
+
+app.post('/api/lab/unified-lora/chat', async (req, res) => {
+  if (!LAB_UNIFIED_CHAT) {
+    return res.status(403).json({
+      ok: false,
+      error: 'Lab unified LoRA chat disabled (set LAB_UNIFIED_CHAT=true on gateway)',
+    });
+  }
+  const message = String(req.body?.message || req.body?.user_message || '').trim();
+  if (!message) {
+    return res.status(400).json({ ok: false, error: 'Missing message' });
+  }
+  const prior = Array.isArray(req.body?.history) ? req.body.history : [];
+  const messages = [];
+  for (const turn of prior) {
+    const role = turn?.role === 'assistant' ? 'assistant' : 'user';
+    const content = String(turn?.content || '').trim();
+    if (content) messages.push({ role, content });
+  }
+  messages.push({ role: 'user', content: message });
+
+  const maxTokens = Number(req.body?.max_tokens) || Number(req.body?.max_length) || 256;
+  const temperature = Number(req.body?.temperature ?? 0.2);
+  const usePersona = req.body?.use_persona === true;
+  const doSample = req.body?.do_sample === true;
+
+  const started = Date.now();
+  try {
+    const result = await unifiedLoraChat({
+      messages,
+      maxTokens,
+      temperature,
+      egregore: HOSTED_EGREGORE,
+      usePersona,
+      doSample,
+    });
+    return res.json({
+      ok: true,
+      content: result.content,
+      source: 'lab-unified-lora',
+      model: result.model,
+      egregore: result.egregore,
+      latency_ms: Date.now() - started,
+    });
+  } catch (e) {
+    const code = e.statusCode || 503;
+    return res.status(code).json({ ok: false, error: e.message || String(e) });
+  }
+});
 
 app.get('/health', async (_req, res) => {
   const ollama = await ollamaHealth();
@@ -143,6 +226,8 @@ app.get('/api/public/capability', async (req, res) => {
     ollama_model_ready: ollama.hasConfiguredModel,
     unified_lora_ready: unified.ok,
     unified_egregores: unified.available || [],
+    long_form_supported: true,
+    synthesis_voice_mode: true,
     message: hasKey
       ? 'Ready — BYOK Groq or hosted S² inference.'
       : hostedReady
@@ -170,7 +255,9 @@ async function handleChat(req, res) {
       tensionBlock: continuity.tensionBlock,
       cadenceOverlay: continuity.cadence.overlay,
     });
-    const maxTokens = req.body.max_tokens ?? 800;
+    const longForm = isLongFormRequest(req.body);
+    const voiceMode = resolveVoiceMode(req.body);
+    const maxTokens = resolveMaxTokens(req.body);
     const temperature = resolveTemperature(req, {
       endpointDefault: useHosted ? HOSTED_TEMPERATURE : 0.4,
       productFallback: productId,
@@ -178,29 +265,84 @@ async function handleChat(req, res) {
 
     let result;
     let source;
+    let longFormMeta = {};
 
-    if (useHosted) {
-      let usedUnified = false;
-      if (PREFER_UNIFIED_LORA) {
+    async function hostedChat({ msgs, tokens, preferOllama = false }) {
+      const capUnified = longForm
+        ? Math.min(tokens, UNIFIED_LONG_FORM_MAX_TOKENS)
+        : tokens;
+      const tryUnified =
+        PREFER_UNIFIED_LORA && !preferOllama && !(longForm && LONG_FORM_PREFER_OLLAMA);
+      if (tryUnified) {
         const unified = await unifiedHealth();
         if (unified.ok) {
           try {
-            result = await unifiedLoraChat({
-              messages,
-              maxTokens,
+            const u = await unifiedLoraChat({
+              messages: msgs,
+              maxTokens: capUnified,
               temperature,
               egregore: HOSTED_EGREGORE,
+              usePersona: voiceMode === 'synthesis' ? false : undefined,
             });
-            source = 'hosted-unified-lora';
-            usedUnified = true;
+            return { result: u, source: 'hosted-unified-lora' };
           } catch (unifiedErr) {
             console.warn('[hosted] unified LoRA failed, falling back to Ollama:', unifiedErr.message);
           }
         }
       }
-      if (!usedUnified) {
-        result = await ollamaChat({ messages, maxTokens, temperature });
-        source = 'hosted-ollama';
+      const o = await ollamaChat({ messages: msgs, maxTokens: tokens, temperature });
+      return { result: o, source: 'hosted-ollama' };
+    }
+
+    if (useHosted) {
+      if (longForm && shouldUseOutlineExpand(req.body)) {
+        const expanded = await runLongFormOutlineExpand({
+          chat: async ({ messages: msgs, maxTokens: tokens }) => {
+            const { result: r } = await hostedChat({
+              msgs,
+              tokens,
+              preferOllama: true,
+            });
+            return r;
+          },
+          baseMessages: messages,
+          userQuery,
+          body: req.body,
+          temperature,
+        });
+        result = expanded;
+        source = 'hosted-ollama-long-form';
+        longFormMeta = {
+          long_form: true,
+          outline_expand: true,
+          sections: expanded.sections,
+          voice_mode: voiceMode,
+        };
+      } else if (longForm) {
+        const single = await runLongFormSingleShot({
+          chat: async ({ messages: msgs, maxTokens: tokens }) => {
+            const { result: r, source: s } = await hostedChat({
+              msgs,
+              tokens,
+              preferOllama: LONG_FORM_PREFER_OLLAMA,
+            });
+            return { ...r, _source: s };
+          },
+          baseMessages: messages,
+          userQuery,
+          body: req.body,
+          temperature,
+          maxTokens,
+        });
+        result = single;
+        source = single._source
+          ? `${single._source}-long-form`
+          : 'hosted-ollama-long-form';
+        longFormMeta = { long_form: true, outline_expand: false, voice_mode: voiceMode };
+      } else {
+        const { result: r, source: s } = await hostedChat({ msgs: messages, tokens: maxTokens });
+        result = r;
+        source = s;
       }
     } else {
       result = await groqChat({
@@ -235,6 +377,9 @@ async function handleChat(req, res) {
       rag_chunks: continuity.rag.chunks,
       canon_used: Boolean(continuity.canonBlock),
       tensions_active: continuity.tensionIds,
+      voice_mode: voiceMode,
+      max_tokens: maxTokens,
+      ...longFormMeta,
       processing_time_ms: null,
     });
   } catch (e) {

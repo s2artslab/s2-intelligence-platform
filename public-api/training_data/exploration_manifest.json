@@ -1,0 +1,377 @@
+{
+  "generated_at": "2026-05-26T18:00:14.344088+00:00",
+  "apps_root": "c:\\Users\\shast\\S2\\APPs",
+  "counts": {
+    "podcast_script_json": 6,
+    "podcast_script_md": 7,
+    "research_solarpunk": 2,
+    "canon": 8,
+    "research_docs": 13,
+    "discourse": 7,
+    "marketing_docs": 11,
+    "forge_rag": 6
+  },
+  "items": [
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\episode_10_authentic_voice_script.json",
+      "category": "podcast_script_json",
+      "bytes": 18031,
+      "ext": ".json"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\episode_11_roast_script.json",
+      "category": "podcast_script_json",
+      "bytes": 16436,
+      "ext": ".json"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\innerpath_ai_beta_release_script.json",
+      "category": "podcast_script_json",
+      "bytes": 15566,
+      "ext": ".json"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\podcast_9_ai_humor_script_no_intro.json",
+      "category": "podcast_script_json",
+      "bytes": 17055,
+      "ext": ".json"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\podcast_9_final_script.json",
+      "category": "podcast_script_json",
+      "bytes": 10795,
+      "ext": ".json"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\podcast_9_updated_script.json",
+      "category": "podcast_script_json",
+      "bytes": 15162,
+      "ext": ".json"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\episode_10_authentic_voice_script.md",
+      "category": "podcast_script_md",
+      "bytes": 14951,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\episode_11_roast_script.md",
+      "category": "podcast_script_md",
+      "bytes": 9618,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\episode_9_spotify_description.md",
+      "category": "podcast_script_md",
+      "bytes": 2323,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\episode_9_tiktok_descriptions.md",
+      "category": "podcast_script_md",
+      "bytes": 4195,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\episode_9_youtube_description.md",
+      "category": "podcast_script_md",
+      "bytes": 4265,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\innerpath_ai_beta_release_script.md",
+      "category": "podcast_script_md",
+      "bytes": 12994,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\ninefold-studio-clean\\egregorelab\\podcasts\\podcast_9_final_script.md",
+      "category": "podcast_script_md",
+      "bytes": 13437,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\SOLARPUNK_TECHNOLOGY_ECOSYSTEM.md",
+      "category": "research_solarpunk",
+      "bytes": 18571,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\SOLARPUNK_VR_INTEGRATION_GUIDE.md",
+      "category": "research_solarpunk",
+      "bytes": 10862,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\canon\\axioms\\deep-key-threshold.md",
+      "category": "canon",
+      "bytes": 338,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\canon\\axioms\\evidence-before-synthesis.md",
+      "category": "canon",
+      "bytes": 469,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\canon\\glossary\\content-package.md",
+      "category": "canon",
+      "bytes": 487,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\canon\\glossary\\deep-key.md",
+      "category": "canon",
+      "bytes": 452,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\canon\\interpretive-laws\\governed-interface-commit.md",
+      "category": "canon",
+      "bytes": 992,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\canon\\prohibitions\\fabricated-authority.md",
+      "category": "canon",
+      "bytes": 367,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\canon\\README.md",
+      "category": "canon",
+      "bytes": 1230,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\canon\\tensions\\speed-vs-threshold.md",
+      "category": "canon",
+      "bytes": 459,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\ake-continuity\\LAYER_RESPONSIBILITIES.md",
+      "category": "research_docs",
+      "bytes": 813,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\ake-continuity\\README.md",
+      "category": "research_docs",
+      "bytes": 2023,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\consciousness_development_research.md",
+      "category": "research_docs",
+      "bytes": 1477,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\governed-interface\\CLAIMS_REGISTER.md",
+      "category": "research_docs",
+      "bytes": 3909,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\governed-interface\\crosswalk\\REPO_LINKS.md",
+      "category": "research_docs",
+      "bytes": 1935,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\governed-interface\\METHODS.md",
+      "category": "research_docs",
+      "bytes": 5803,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\governed-interface\\OVERVIEW.md",
+      "category": "research_docs",
+      "bytes": 4458,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\governed-interface\\protocols\\sovereign-ai-grounding-v1.md",
+      "category": "research_docs",
+      "bytes": 3216,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\governed-interface\\README.md",
+      "category": "research_docs",
+      "bytes": 3527,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\README.md",
+      "category": "research_docs",
+      "bytes": 1123,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\reality_manipulation_research.md",
+      "category": "research_docs",
+      "bytes": 11545,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\technical_specifications.md",
+      "category": "research_docs",
+      "bytes": 10547,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\docs\\user_guide.md",
+      "category": "research_docs",
+      "bytes": 10469,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\discourse\\export\\.gitkeep",
+      "category": "discourse",
+      "bytes": 0,
+      "ext": ""
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\discourse\\export\\pilot-deep-key-legal.jsonl",
+      "category": "discourse",
+      "bytes": 1328,
+      "ext": ".jsonl"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\discourse\\export\\pilot-governed-interface-v1.json",
+      "category": "discourse",
+      "bytes": 1459,
+      "ext": ".json"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\discourse\\preferences\\.gitkeep",
+      "category": "discourse",
+      "bytes": 0,
+      "ext": ""
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\discourse\\preferences\\example-dpo-pair.jsonl",
+      "category": "discourse",
+      "bytes": 786,
+      "ext": ".jsonl"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\discourse\\README.md",
+      "category": "discourse",
+      "bytes": 1120,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2-research\\discourse\\schemas\\discourse-thread.schema.json",
+      "category": "discourse",
+      "bytes": 1883,
+      "ext": ".json"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\AKE_MESSAGING_CONTINUITY.md",
+      "category": "marketing_docs",
+      "bytes": 3201,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\BRAND_VOICE_AKE.md",
+      "category": "marketing_docs",
+      "bytes": 2422,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\CLAIMS_REGISTER.md",
+      "category": "marketing_docs",
+      "bytes": 1285,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\CONTENT_SERIES_OUTLINE.md",
+      "category": "marketing_docs",
+      "bytes": 1976,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\one-pagers\\ACADEMIC_ABSTRACT.md",
+      "category": "marketing_docs",
+      "bytes": 2854,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\one-pagers\\PARTNER_BRIEF.md",
+      "category": "marketing_docs",
+      "bytes": 1949,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\R730_INTEGRATION.md",
+      "category": "marketing_docs",
+      "bytes": 4318,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\R730_MINIMAL_RUNBOOK.md",
+      "category": "marketing_docs",
+      "bytes": 3612,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\README.md",
+      "category": "marketing_docs",
+      "bytes": 969,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\REPO_LAYOUT.md",
+      "category": "marketing_docs",
+      "bytes": 4089,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\S2 Marketing Automation\\s2-marketing\\docs\\TIKTOK_STUDIO_VS_CCC.md",
+      "category": "marketing_docs",
+      "bytes": 1879,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2forge\\web\\rag-corpus\\ally-course-templates.md",
+      "category": "forge_rag",
+      "bytes": 1003,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2forge\\web\\rag-corpus\\artist-brand-course-patterns.md",
+      "category": "forge_rag",
+      "bytes": 917,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2forge\\web\\rag-corpus\\immersive-course-patterns.md",
+      "category": "forge_rag",
+      "bytes": 4282,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2forge\\web\\rag-corpus\\README.md",
+      "category": "forge_rag",
+      "bytes": 888,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2forge\\web\\rag-corpus\\s2-brand-guidelines.md",
+      "category": "forge_rag",
+      "bytes": 1102,
+      "ext": ".md"
+    },
+    {
+      "path": "c:\\Users\\shast\\S2\\APPs\\s2forge\\web\\rag-corpus\\solarpunk-community-campaign.md",
+      "category": "forge_rag",
+      "bytes": 1281,
+      "ext": ".md"
+    }
+  ],
+  "total_files": 60
+}

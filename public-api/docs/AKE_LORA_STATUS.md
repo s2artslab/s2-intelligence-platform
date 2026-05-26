@@ -15,8 +15,9 @@
 | `HOSTED_PREFER_UNIFIED_LORA` | `false` |
 | Unified `:8100` | Production-safe **CPU** mode (`7b-cuda` drop-in removed) |
 | Tier C dataset | `ake_tier_c_blended.json` — **12,023** rows |
-| Tier C train | Running — `tail -f /var/log/s2-ake-tier-c-train.log` |
-| Eval gate | Run after train completes: `python3 /opt/s2-ecosystem/public-api/scripts/tier-c-eval-gate-r730.py` |
+| Tier C train | Check `tail -f /var/log/s2-ake-tier-c-train.log` (epoch 2.0 = done) |
+| Lab GPU serve | After train + VRAM: `bash scripts/enable-unified-4bit-after-tier-c-r730.sh` |
+| Eval gate | After 4-bit serve up: `python3 /opt/s2-ecosystem/public-api/scripts/tier-c-eval-gate-r730.py` |
 
 **Do not** set `HOSTED_PREFER_UNIFIED_LORA=true` until eval gate exits 0.
 
@@ -91,7 +92,8 @@ flowchart LR
 Memory modes: [R730_UNIFIED_MEMORY_PLAN.md](./R730_UNIFIED_MEMORY_PLAN.md)
 
 - **Production unified (lab CPU):** `bash scripts/setup-unified-production-r730.sh`
-- **7B CUDA experiment:** `bash scripts/setup-unified-7b-r730.sh` (keeps `HOSTED_PREFER_UNIFIED_LORA=false`)
+- **4-bit CUDA lab (preferred):** `bash scripts/enable-unified-4bit-after-tier-c-r730.sh`
+- **fp16 CUDA (OOM risk):** `bash scripts/setup-unified-7b-r730.sh` — avoid on P40
 
 ---
 
@@ -116,6 +118,7 @@ curl -s http://127.0.0.1:11434/api/tags | python3 -c "import sys,json; print([m[
 | Doc | Purpose |
 |-----|---------|
 | [AKE_IDENTITY_AND_TRAINING_ARCHITECTURE.md](./AKE_IDENTITY_AND_TRAINING_ARCHITECTURE.md) | Archetype vs training data; research & marketing framing |
+| [AKE_QLORA_TRAINING_SYSTEM.md](./AKE_QLORA_TRAINING_SYSTEM.md) | End-to-end QLoRA pipeline (C/D/E, masking, r730) |
 | [HOSTED_AKE_GATEWAY.md](../HOSTED_AKE_GATEWAY.md) | Gateway architecture |
 | [TIER_C_RETRAIN_RUNBOOK.md](./TIER_C_RETRAIN_RUNBOOK.md) | Retrain procedure |
 | [R730_UNIFIED_MEMORY_PLAN.md](./R730_UNIFIED_MEMORY_PLAN.md) | P40 CPU vs CUDA 7B |
