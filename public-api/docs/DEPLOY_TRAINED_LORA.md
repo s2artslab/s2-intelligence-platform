@@ -1,5 +1,7 @@
 # Deploy trained egregore LoRAs (r730)
 
+**Production hosted users:** Ollama `s2-ake` until Tier C passes — [AKE_LORA_STATUS.md](./AKE_LORA_STATUS.md).
+
 After the nine SFT LoRA training week, use this checklist.
 
 ## 1. Unified LoRA API (`:8100`)
@@ -26,7 +28,7 @@ systemctl enable --now s2-public-api
 curl http://127.0.0.1:3020/health
 ```
 
-`hosted_inference` should be `unified-lora` when `:8100` is healthy.
+`hosted_inference` should be `ollama` in production (`HOSTED_PREFER_UNIFIED_LORA=false`). After Tier C gate, may be `unified-lora`.
 
 ## 3. Benchmarks (from dev PC)
 
