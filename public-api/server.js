@@ -61,8 +61,9 @@ const {
 const { resolveTemperature } = require('./lib/product-temperature');
 const {
   resolveMorphicPolicy,
-  applyMorphicTemperature,
+  applyProfileTemperature,
 } = require('./lib/morphic-resonance');
+const { applyInferenceDepth } = require('./lib/inference-profile');
 const {
   ensembleEnabled,
   resolveEnsembleMode,
@@ -72,6 +73,22 @@ const {
   recordChatSample,
   getConsciousnessStatus,
 } = require('./lib/consciousness-metrics');
+const {
+  bitnetHealth,
+  bitnetChat,
+  ENABLED: BITNET_ENABLED,
+} = require('./lib/bitnet');
+const {
+  resolveInferenceLane,
+  normalizeTaskClass,
+  bitnetLaneBlocked,
+} = require('./lib/inference-lane-router');
+const {
+  recordBenchmarkRun,
+  readRecentRuns,
+  getResearchStatus,
+} = require('./lib/bitnet-research-metrics');
+const { mountMindGamesPlugin } = require('./lib/mind-games-plugin');
 
 const PORT = Number(process.env.PORT || 3010);
 const LAB_GROQ_KEY = process.env.GROQ_API_KEY || '';
@@ -253,9 +270,67 @@ app.post('/api/lab/unified-lora/chat', async (req, res) => {
   }
 });
 
+/** Lab hosted chat — Ollama path without billing (for eval / tunnel dev). */
+app.post('/api/lab/hosted/chat', async (req, res) => {
+  if (!LAB_UNIFIED_CHAT) {
+    return res.status(403).json({
+      ok: false,
+      error: 'Lab hosted chat disabled (set LAB_HOSTED_UNLOCK=true on gateway)',
+    });
+  }
+  const message = String(req.body?.message || req.body?.text || req.body?.user_message || '').trim();
+  if (!message) {
+    return res.status(400).json({ ok: false, error: 'Missing message' });
+  }
+  const prior = Array.isArray(req.body?.history) ? req.body.history : [];
+  const morphicPolicy = resolveMorphicPolicy(req.body);
+  const maxTokens = applyInferenceDepth(
+    req.body,
+    resolveMaxTokens(req.body),
+    morphicPolicy,
+  );
+  const temperature = applyProfileTemperature(
+    Number(req.body?.temperature ?? HOSTED_TEMPERATURE),
+    morphicPolicy,
+  );
+  const model =
+    String(req.body?.model || '').trim() ||
+    (process.env.OLLAMA_PREFER_LORA === 'true'
+      ? process.env.OLLAMA_LORA_MODEL || 's2-ake-lora'
+      : process.env.OLLAMA_MODEL || 's2-ake');
+
+  const started = Date.now();
+  try {
+    const messages = buildGatewayMessages(
+      {
+        text: message,
+        context: req.body?.context || 'general',
+        history: prior,
+        voice_mode: req.body?.voice_mode || 'synthesis',
+        matter: req.body?.matter,
+      },
+      '',
+      {},
+    );
+    const o = await ollamaChat({ messages, maxTokens, temperature, model });
+    return res.json({
+      ok: true,
+      content: o.content,
+      source: 'lab-hosted-ollama',
+      model: o.model || model,
+      latency_ms: Date.now() - started,
+      quality_note: 'No billing — lab eval only. Use /api/public/chat in production.',
+    });
+  } catch (e) {
+    const code = e.statusCode || 503;
+    return res.status(code).json({ ok: false, error: e.message || String(e) });
+  }
+});
+
 app.get('/health', async (_req, res) => {
   const ollama = await ollamaHealth();
   const unified = await unifiedHealth();
+  const bitnet = await bitnetHealth();
   const rag = ragStatus();
   const morphicPolicy = resolveMorphicPolicy({});
   res.json({
@@ -265,6 +340,10 @@ app.get('/health', async (_req, res) => {
     assistant: 's2-ake',
     ollama,
     unified_lora: unified,
+    bitnet: {
+      enabled: BITNET_ENABLED,
+      ...bitnet,
+    },
     hosted_inference:
       PREFER_UNIFIED_LORA && unified.ok ? 'unified-lora' : ollama.activeModel || 'ollama',
     rag,
@@ -276,6 +355,8 @@ app.get('/health', async (_req, res) => {
     morphic_policy: {
       dimension: morphicPolicy.dimension,
       label: morphicPolicy.label,
+      profile_key: morphicPolicy.profileKey,
+      inference_axes: morphicPolicy.axes,
       ensemble_psla_opt_in: true,
       ensemble_default_mode: process.env.ENSEMBLE_DEFAULT_MODE || 'cheap',
       ensemble_psla_auto: process.env.ENSEMBLE_PSLA_COLLAPSE === 'true',
@@ -310,6 +391,8 @@ app.get('/api/public/capability', async (req, res) => {
     ollama_model_ready: ollama.hasConfiguredModel,
     unified_lora_ready: unified.ok,
     unified_egregores: unified.available || [],
+    bitnet_enabled: BITNET_ENABLED,
+    bitnet_ready: BITNET_ENABLED && (await bitnetHealth()).ok,
     long_form_supported: true,
     synthesis_voice_mode: true,
     message: hasKey
@@ -337,12 +420,13 @@ async function handleChat(req, res) {
     const morphicPolicy = resolveMorphicPolicy(req.body);
     const longForm = isLongFormRequest(req.body);
     const voiceMode = resolveVoiceMode(req.body);
-    const maxTokens = resolveMaxTokens(req.body);
+    const baseMaxTokens = resolveMaxTokens(req.body);
+    const maxTokens = applyInferenceDepth(req.body, baseMaxTokens, morphicPolicy);
     const productTemp = resolveTemperature(req, {
       endpointDefault: useHosted ? HOSTED_TEMPERATURE : 0.4,
       productFallback: productId,
     });
-    const temperature = applyMorphicTemperature(productTemp, morphicPolicy);
+    const temperature = applyProfileTemperature(productTemp, morphicPolicy);
 
     const useEnsemble =
       !longForm && ensembleEnabled(req.body, productId, req);
@@ -364,6 +448,8 @@ async function handleChat(req, res) {
     let source;
     let longFormMeta = {};
     let ensembleMeta = null;
+    const taskClass = normalizeTaskClass(req.body, req);
+    const inferenceLane = resolveInferenceLane(req.body, req);
 
     async function hostedChat({ msgs, tokens, preferOllama = false }) {
       const capUnified = longForm
@@ -423,6 +509,22 @@ async function handleChat(req, res) {
       source = collapsed.source;
       continuity = collapsed.continuity;
       ensembleMeta = collapsed.ensemble;
+    } else if (useHosted && inferenceLane === 'bitnet') {
+      const bitnet = await bitnetHealth();
+      if (bitnet.ok) {
+        result = await bitnetChat({
+          messages,
+          maxTokens,
+          temperature,
+          taskClass,
+        });
+        source = 'hosted-bitnet';
+      } else {
+        console.warn('[bitnet] sidecar unavailable, falling back to Ollama:', bitnet.error);
+        const { result: r, source: s } = await hostedChat({ msgs: messages, tokens: maxTokens });
+        result = r;
+        source = s;
+      }
     } else if (useHosted) {
       if (longForm && shouldUseOutlineExpand(req.body)) {
         const expanded = await runLongFormOutlineExpand({
@@ -498,6 +600,8 @@ async function handleChat(req, res) {
       cadence: continuity.cadence.cadence,
       morphicDimension: morphicPolicy.dimension,
       morphicLabel: morphicPolicy.label,
+      profileKey: morphicPolicy.profileKey,
+      inferenceAxes: morphicPolicy.axes,
       ensemble: Boolean(ensembleMeta),
       ensembleStrategy: ensembleMeta?.strategy,
       disagreement: ensembleMeta?.disagreement,
@@ -505,6 +609,10 @@ async function handleChat(req, res) {
       ragChunks: continuity.rag.chunks.length,
       temperature,
       source,
+      inferenceLane: source === 'hosted-bitnet' ? 'bitnet' : 'hosted',
+      taskClass,
+      quantizationBits: source === 'hosted-bitnet' ? result.quantization_bits ?? 1.58 : 4,
+      memoryMb: result.memory_mb ?? null,
     });
 
     res.json({
@@ -513,6 +621,10 @@ async function handleChat(req, res) {
       response: assistantText,
       model: result.model,
       source,
+      inference_lane: source === 'hosted-bitnet' ? 'bitnet' : inferenceLane || 'hosted',
+      task_class: taskClass,
+      quantization_bits: source === 'hosted-bitnet' ? result.quantization_bits ?? 1.58 : null,
+      memory_mb: result.memory_mb ?? null,
       assistant: 's2-ake',
       cadence: continuity.cadence.cadence,
       adapter_hint: continuity.cadence.adapterHint,
@@ -526,6 +638,9 @@ async function handleChat(req, res) {
       morphic_resonance: morphicPolicy.dimension,
       morphic_label: morphicPolicy.label,
       morphic_rag_limit: morphicPolicy.ragLimit,
+      inference_profile: morphicPolicy.axes,
+      inference_profile_key: morphicPolicy.profileKey,
+      inference_source: morphicPolicy.source,
       ensemble: ensembleMeta,
       ...longFormMeta,
       processing_time_ms: Date.now() - started,
@@ -543,6 +658,101 @@ async function handleChat(req, res) {
 app.post('/api/ai/chat', handleChat);
 app.post('/api/public/chat', handleChat);
 app.post('/api/public/chat-with-context', handleChat);
+
+/** BitNet research lane — specialist infer + metrics for S² Research */
+app.get('/api/research/bitnet/status', async (_req, res) => {
+  const bitnet = await bitnetHealth();
+  res.json(getResearchStatus(bitnet));
+});
+
+app.get('/api/research/bitnet/runs', (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 50, 500);
+  res.json({ runs: readRecentRuns(limit) });
+});
+
+app.post('/api/research/bitnet/infer', async (req, res) => {
+  const started = Date.now();
+  const userQuery = lastUserText(req.body);
+  const taskClass = normalizeTaskClass(req.body, req);
+  const laneHeader = (req.get('X-S2-Inference-Lane') || '').toLowerCase();
+  const useBitnet =
+    BITNET_ENABLED &&
+    (laneHeader === 'compact' ||
+      laneHeader === 'bitnet' ||
+      req.body.inference_lane === 'bitnet' ||
+      resolveInferenceLane(req.body, req) === 'bitnet');
+  const maxTokens = Number(req.body.max_tokens) || Number(req.body.max_length) || 256;
+  const temperature = Number(req.body.temperature ?? 0.2);
+
+  try {
+    let result;
+    let lane;
+    if (useBitnet && !bitnetLaneBlocked(req.body)) {
+      const bitnet = await bitnetHealth();
+      if (!bitnet.ok) {
+        return res.status(503).json({ ok: false, error: bitnet.error || 'BitNet sidecar unavailable' });
+      }
+      result = await bitnetChat({
+        messages: [{ role: 'user', content: userQuery }],
+        maxTokens,
+        temperature,
+        taskClass,
+      });
+      lane = 'bitnet';
+    } else {
+      const o = await ollamaChat({
+        messages: [{ role: 'user', content: userQuery }],
+        maxTokens,
+        temperature,
+      });
+      result = { ...o, quantization_bits: 4, memory_mb: null };
+      lane = 'baseline';
+    }
+
+    const latencyMs = Date.now() - started;
+    res.json({
+      ok: true,
+      content: result.content || result.response,
+      response: result.content || result.response,
+      model: result.model,
+      lane,
+      task_class: taskClass,
+      latency_ms: result.latency_ms ?? latencyMs,
+      quantization_bits: result.quantization_bits ?? (lane === 'bitnet' ? 1.58 : 4),
+      memory_mb: result.memory_mb ?? null,
+      prompt_tokens: result.prompt_tokens ?? null,
+      completion_tokens: result.completion_tokens ?? null,
+      stub_mode: result.stub_mode ?? false,
+    });
+  } catch (e) {
+    res.status(e.statusCode || 500).json({ ok: false, error: e.message || String(e) });
+  }
+});
+
+app.post('/api/research/bitnet/record-batch', (req, res) => {
+  const runs = Array.isArray(req.body?.runs) ? req.body.runs : [];
+  const recorded = [];
+  for (const run of runs) {
+    recorded.push(
+      recordBenchmarkRun({
+        runType: req.body.run_type || 'benchmark',
+        lane: run.lane,
+        taskClass: run.task_class,
+        promptId: run.prompt_id,
+        modelId: run.model_id,
+        latencyMs: run.latency_ms,
+        qualityScore: run.quality_score,
+        hallucinationFlag: run.hallucination_flag,
+        responsePreview: run.response_preview,
+        quantizationBits: run.quantization_bits,
+        memoryMb: run.memory_mb,
+        baselineLatencyMs: run.baseline_latency_ms,
+        baselineQualityScore: run.baseline_quality_score,
+      }),
+    );
+  }
+  res.json({ ok: true, recorded: recorded.length, runs: recorded });
+});
 
 function memoryAuthorized(req) {
   const expected = (
@@ -704,8 +914,8 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
       endpointDefault: Number(process.env.OLLAMA_EXPLORATION_TEMPERATURE || 0.15),
       productFallback: productId,
     });
-    const temperature = applyMorphicTemperature(productTemp, morphicPolicy);
-    const maxTokens = req.body.max_tokens ?? 3000;
+    const temperature = applyProfileTemperature(productTemp, morphicPolicy);
+    const maxTokens = applyInferenceDepth(body, req.body.max_tokens ?? 3000, morphicPolicy);
     const useEnsemble = ensembleEnabled(body, productId, req);
     const ensembleMode = useEnsemble ? resolveEnsembleMode(body, req) : null;
 
@@ -758,6 +968,8 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
       cadence: continuity.cadence.cadence,
       morphicDimension: morphicPolicy.dimension,
       morphicLabel: morphicPolicy.label,
+      profileKey: morphicPolicy.profileKey,
+      inferenceAxes: morphicPolicy.axes,
       ensemble: Boolean(ensembleMeta),
       ensembleStrategy: ensembleMeta?.strategy,
       disagreement: ensembleMeta?.disagreement,
@@ -779,6 +991,9 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
       temperature,
       morphic_resonance: morphicPolicy.dimension,
       morphic_label: morphicPolicy.label,
+      inference_profile: morphicPolicy.axes,
+      inference_profile_key: morphicPolicy.profileKey,
+      inference_source: morphicPolicy.source,
       ensemble: ensembleMeta,
       processing_time_ms: Date.now() - started,
     });
@@ -920,6 +1135,8 @@ app.post('/api/public/strategist/generate', async (req, res) => {
   }
 });
 
+mountMindGamesPlugin(app);
+
 app.listen(PORT, () => {
   console.log(`S² Intelligence API (Ake gateway) http://0.0.0.0:${PORT}`);
   console.log(`  Ollama: ${process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434'}`);
@@ -944,4 +1161,8 @@ app.listen(PORT, () => {
   console.log(
     `  PSLA ensemble: opt-in (default mode=${process.env.ENSEMBLE_DEFAULT_MODE || 'cheap'}, auto_all_psla=${process.env.ENSEMBLE_PSLA_COLLAPSE === 'true'})`,
   );
+  console.log(
+    `  BitNet lane: enabled=${BITNET_ENABLED} url=${process.env.BITNET_BASE_URL || 'http://127.0.0.1:8120'}`,
+  );
+  console.log('  Mind Games plugin: /api/plugins/mind-games (strengths, progress, achievements)');
 });
