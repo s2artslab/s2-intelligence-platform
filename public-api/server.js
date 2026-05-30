@@ -88,6 +88,13 @@ const {
   readRecentRuns,
   getResearchStatus,
 } = require('./lib/bitnet-research-metrics');
+const {
+  listEgregores,
+  getProfile,
+  hasBitnetAdapter,
+  writeManifestEntry,
+  normalizeId,
+} = require('./lib/egregore-registry');
 const { mountMindGamesPlugin } = require('./lib/mind-games-plugin');
 
 const PORT = Number(process.env.PORT || 3010);
@@ -391,6 +398,7 @@ app.get('/api/public/capability', async (req, res) => {
     ollama_model_ready: ollama.hasConfiguredModel,
     unified_lora_ready: unified.ok,
     unified_egregores: unified.available || [],
+    egregore_inference: listEgregores(),
     bitnet_enabled: BITNET_ENABLED,
     bitnet_ready: BITNET_ENABLED && (await bitnetHealth()).ok,
     long_form_supported: true,
@@ -417,6 +425,7 @@ async function handleChat(req, res) {
     }
 
     const userQuery = lastUserText(req.body);
+    const egregoreId = normalizeId(req.body.egregore_id || req.body.egregore || HOSTED_EGREGORE);
     const morphicPolicy = resolveMorphicPolicy(req.body);
     const longForm = isLongFormRequest(req.body);
     const voiceMode = resolveVoiceMode(req.body);
@@ -451,7 +460,7 @@ async function handleChat(req, res) {
     const taskClass = normalizeTaskClass(req.body, req);
     const inferenceLane = resolveInferenceLane(req.body, req);
 
-    async function hostedChat({ msgs, tokens, preferOllama = false }) {
+    async function hostedChat({ msgs, tokens, preferOllama = false, eg = egregoreId }) {
       const capUnified = longForm
         ? Math.min(tokens, UNIFIED_LONG_FORM_MAX_TOKENS)
         : tokens;
@@ -465,8 +474,8 @@ async function handleChat(req, res) {
               messages: msgs,
               maxTokens: capUnified,
               temperature,
-              egregore: HOSTED_EGREGORE,
-              usePersona: voiceMode === 'synthesis' ? false : undefined,
+              egregore: eg,
+              usePersona: voiceMode === 'synthesis' && eg === 'ake' ? false : undefined,
             });
             return { result: u, source: 'hosted-unified-lora' };
           } catch (unifiedErr) {
@@ -517,6 +526,7 @@ async function handleChat(req, res) {
           maxTokens,
           temperature,
           taskClass,
+          egregoreId,
         });
         source = 'hosted-bitnet';
       } else {
@@ -625,7 +635,9 @@ async function handleChat(req, res) {
       task_class: taskClass,
       quantization_bits: source === 'hosted-bitnet' ? result.quantization_bits ?? 1.58 : null,
       memory_mb: result.memory_mb ?? null,
-      assistant: 's2-ake',
+      assistant: egregoreId === 'ake' ? 's2-ake' : egregoreId,
+      egregore_id: egregoreId,
+      bitnet_adapter_ready: hasBitnetAdapter(egregoreId),
       cadence: continuity.cadence.cadence,
       adapter_hint: continuity.cadence.adapterHint,
       rag_used: continuity.rag.chunks.length > 0,
@@ -658,6 +670,44 @@ async function handleChat(req, res) {
 app.post('/api/ai/chat', handleChat);
 app.post('/api/public/chat', handleChat);
 app.post('/api/public/chat-with-context', handleChat);
+
+/** EgregoreLab — list egregores and dual-lane (4-bit / 1.58-bit) readiness */
+app.get('/api/public/egregore/inference', (_req, res) => {
+  res.json({
+    success: true,
+    egregores: listEgregores(),
+    lanes: {
+      hosted: 'Ollama 4-bit / unified LoRA + RAG',
+      bitnet: 'BitNet b1.58 sidecar + RAG (compact)',
+      auto: 'BitNet when adapter exists, else hosted',
+    },
+    headers: {
+      lane: 'X-S2-Inference-Lane: hosted | bitnet | auto',
+      task: 'X-S2-Task-Class: compact | summary | …',
+    },
+  });
+});
+
+/** EgregoreLab — register user egregore for inference manifest (BitNet train queued separately) */
+app.post('/api/public/egregore/register', express.json(), (req, res) => {
+  const egregoreId = normalizeId(req.body?.egregore_id || req.body?.egregore);
+  if (!egregoreId) {
+    return res.status(400).json({ success: false, error: 'egregore_id required' });
+  }
+  const profile = req.body?.profile || getProfile(egregoreId) || {};
+  const entry = writeManifestEntry(egregoreId, {
+    name: profile.name || req.body?.name || egregoreId,
+    specialty: profile.specialty || req.body?.specialty || '',
+    source: 'egregorelab',
+    training_row_count: Array.isArray(req.body?.training_rows) ? req.body.training_rows.length : 0,
+  });
+  res.json({
+    success: true,
+    egregore_id: egregoreId,
+    manifest: entry,
+    next: 'Run export-egregorelab-inference-bundle.py then train-bitnet-custom-egregore-r730.sh on r730',
+  });
+});
 
 /** BitNet research lane — specialist infer + metrics for S² Research */
 app.get('/api/research/bitnet/status', async (_req, res) => {
