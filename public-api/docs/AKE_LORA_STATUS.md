@@ -6,18 +6,20 @@
 
 **Last aligned:** May 2026 (post Tier A/B ablation on r730)
 
-## r730 live status (2026-05-25)
+## r730 live status (2026-05-26)
 
 | Item | State |
 |------|--------|
 | Proxmox `.78` | Up |
 | Hosted gateway | `hosted_inference: s2-ake` (Ollama) |
 | `HOSTED_PREFER_UNIFIED_LORA` | `false` |
-| Unified `:8100` | Production-safe **CPU** mode (`7b-cuda` drop-in removed) |
-| Tier C dataset | `ake_tier_c_blended.json` — **12,023** rows |
-| Tier C train | Check `tail -f /var/log/s2-ake-tier-c-train.log` (epoch 2.0 = done) |
-| Lab GPU serve | After train + VRAM: `bash scripts/enable-unified-4bit-after-tier-c-r730.sh` |
-| Eval gate | After 4-bit serve up: `python3 /opt/s2-ecosystem/public-api/scripts/tier-c-eval-gate-r730.py` |
+| Unified `:8100` | **4-bit CUDA** lab window (`load_in_4bit: true`, ~4–14 GB VRAM) |
+| ComfyUI | **Stopped** during lab window (files on `/mnt/s2-data`) |
+| Tier C train | Epoch 2.0 complete; stuck process cleared |
+| Lab window | [LAB_LORA_WINDOW.md](./LAB_LORA_WINDOW.md) — `lab-lora-window-on/off-r730.sh` |
+| Eval gate | **PASS** with `--lab-chat --skip-gateway` (log: `/var/log/s2-tier-c-eval-gate-lab.log`) |
+| Lab chat latency | ~8s via gateway (`test-lab-chat-r730.py`) on 4-bit CUDA |
+| `HOSTED_PREFER_UNIFIED_LORA` | Still **`false`** until operator sign-off (gate is necessary, not sufficient) |
 
 **Do not** set `HOSTED_PREFER_UNIFIED_LORA=true` until eval gate exits 0.
 

@@ -28,24 +28,22 @@ from lib.training_row_utils import make_row, split_md_sections, strip_md_frontma
 
 
 def synthesize_from_snippets(title: str, topic: str, snippets: list[str]) -> str:
-    """Rule-based Ake synthesis draft — flag for human review."""
+    """Rule-based Ake synthesis draft — flag for human review. Avoid canned training openers."""
     parts = []
+    lead = title or topic or "this exploration"
     parts.append(
-        f"In my view, the collective held {title} as a field question — "
-        f"not a slogan, but a design problem for how we relate, build, and regenerate."
+        f"The collective took up {lead} as a design question — "
+        "how we relate, build, and regenerate with evidence and care."
     )
-    if topic:
-        parts.append(f"In the context of {topic}, several threads converge in the discussion below.")
-    for i, snip in enumerate(snippets[:4]):
+    if topic and topic != title:
+        parts.append(f"The thread centers on {topic.replace('_', ' ')}.")
+    for snip in snippets[:4]:
         s = re.sub(r"\s+", " ", snip.strip())[:280]
         if s:
-            parts.append(
-                f"From a synthesis perspective, one line of thought stresses: {s} "
-                "This partial view points toward a larger frame the field can integrate."
-            )
+            parts.append(f"Material from the corpus: {s}")
     parts.append(
-        "Deep Key opens the threshold when we treat this topic as practice — "
-        "what we build next must honor community, evidence, and regenerative intent."
+        "What we build next should honor community, evidence, and regenerative intent — "
+        "that is the practical threshold this synthesis points toward."
     )
     return "\n\n".join(parts)
 

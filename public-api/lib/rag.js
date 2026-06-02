@@ -61,6 +61,17 @@ function retrieveContext(query, opts = {}) {
     }))
     .filter((r) => r.score > 0);
 
+  if (opts.egregoreId) {
+    const eg = String(opts.egregoreId).toLowerCase();
+    ranked = ranked.map((r) => ({
+      ...r,
+      score:
+        r.score +
+        ((r.chunk.concept_tags || []).some((t) => String(t).toLowerCase().includes(eg)) ? 3 : 0) +
+        (String(r.chunk.source || '').toLowerCase().includes(eg) ? 2 : 0),
+    }));
+  }
+
   if (opts.cadence) {
     ranked = ranked.map((r) => ({
       ...r,

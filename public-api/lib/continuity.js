@@ -24,11 +24,13 @@ function assembleContinuity(body, userQuery, ownerId, morphicPolicy) {
     morphicPolicy?.ragMaxChars ??
     Number(process.env.RAG_MAX_CHARS || 3000);
 
+  const egregoreId = body.egregore_id || body.egregore || null;
   const rag = retrieveContext(userQuery, {
     limit: ragLimit,
     maxChars: ragMaxChars,
     cadence: cadence.cadence,
     tensionIds: tension.tensionIds,
+    egregoreId,
   });
 
   const canon = canonPromptBlock();

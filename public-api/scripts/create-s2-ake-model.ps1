@@ -1,5 +1,7 @@
 # Create the s2-ake Ollama model on the host where Ollama runs (e.g. r730).
-# Usage: .\scripts\create-s2-ake-model.ps1 [-OllamaHost http://192.168.1.78:11434]
+# On workstation: run on r730 over SSH, or use tunnel + local ollama CLI.
+# Usage: .\scripts\create-s2-ake-model.ps1
+# Workstation via tunnel: $env:OLLAMA_HOST = "http://127.0.0.1:11434"
 
 param(
   [string]$OllamaHost = $env:OLLAMA_HOST

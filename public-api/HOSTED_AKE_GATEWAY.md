@@ -67,6 +67,8 @@ npm start
 
 Expose `:3010` via tunnel or reverse proxy as `https://api.s2artslab.com` (or app-specific host).
 
+**Workstation dev:** r730 blocks LAN inference ports by firewall policy. Use [docs/CURSOR_R730_ALIGNMENT.md](./docs/CURSOR_R730_ALIGNMENT.md) and `scripts/start-r730-inference-tunnel.ps1` (forwards `:3020` and `:11434`).
+
 ## Environment
 
 | Variable | Purpose |

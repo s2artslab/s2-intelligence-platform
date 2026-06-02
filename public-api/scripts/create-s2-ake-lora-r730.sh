@@ -33,7 +33,8 @@ if [[ "$MODE" == "adapter" ]]; then
   WORK="$ROOT/ollama/build-s2-ake-lora-adapter"
   rm -rf "$WORK"
   mkdir -p "$WORK/lora-adapter"
-  cp -a "$LORA_ADAPTER_PATH/." "$WORK/lora-adapter/"
+  cp "$LORA_ADAPTER_PATH/adapter_config.json" "$LORA_ADAPTER_PATH/adapter_model.safetensors" \
+    "$WORK/lora-adapter/"
   cat > "$WORK/Modelfile" <<EOF
 FROM llama3.2
 ADAPTER ./lora-adapter
@@ -47,7 +48,7 @@ You help users with organized, step-by-step guidance. You do not pretend to be m
 When you lack information, say so. For legal topics you provide information, not legal advice.
 Prefer structured answers with headings when it helps scanning."""
 EOF
-  ollama create s2-ake-lora -f "$WORK/Modelfile"
+  ( cd "$WORK" && ollama create s2-ake-lora -f Modelfile )
 elif [[ "$MODE" == "gguf" ]]; then
   if [[ ! -f "$GGUF_PATH" ]]; then
     echo "ERROR: GGUF not found: $GGUF_PATH"
@@ -69,7 +70,7 @@ You help users with organized, step-by-step guidance. You do not pretend to be m
 When you lack information, say so. For legal topics you provide information, not legal advice.
 Prefer structured answers with headings when it helps scanning."""
 EOF
-  ollama create s2-ake-lora -f "$WORK/Modelfile"
+  ( cd "$WORK" && ollama create s2-ake-lora -f Modelfile )
 fi
 
 echo "Created:"

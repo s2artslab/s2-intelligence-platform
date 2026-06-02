@@ -204,7 +204,7 @@
   <header>
     <div>
       <h1><span>Ake</span> · Unified LoRA · Deep Key Lab</h1>
-      <p class="meta">Direct discussion with trained weights on r730 :8100 — not production Ollama. Replies run on CPU (often 1–2 min). <strong id="cfWarn"></strong></p>
+      <p class="meta">Direct discussion with trained weights on r730 :8100 — not production Ollama. <span id="serveMode">Checking serve mode…</span> <strong id="cfWarn"></strong></p>
     </div>
     <div id="health" class="status" aria-live="polite">
       <span class="dot"></span>
@@ -213,11 +213,12 @@
   </header>
   <main>
     <div id="messages" role="log" aria-live="polite">
-      <div class="msg system">Deep Key opens at the threshold. Speak plainly; the lab path uses unified LoRA only.</div>
+      <div class="msg system" id="qualityBanner">Deep Key opens at the threshold. Current Tier C LoRA weights often reply with generic “In the context of…” templates — use <strong>Ollama voice (recommended)</strong> for real conversation, or uncheck it to test raw LoRA.</div>
     </div>
     <div class="composer">
       <div class="options">
-        <label><input type="checkbox" id="trainingFormat" checked /> Training format (no persona block)</label>
+        <label><input type="checkbox" id="useOllama" checked /> Ollama s2-ake voice (recommended)</label>
+        <label><input type="checkbox" id="trainingFormat" checked /> Training format for LoRA (no persona block)</label>
         <label>Max tokens <input type="number" id="maxTokens" min="32" max="512" value="80" title="Lower = faster on CPU; Cloudflare may 524 above ~100s" /></label>
         <label>Temperature <input type="number" id="temperature" min="0" max="1" step="0.05" value="0.2" /></label>
       </div>
@@ -237,9 +238,11 @@
     const clearBtn = document.getElementById("clear");
     const healthEl = document.getElementById("health");
     const healthText = document.getElementById("healthText");
+    const useOllama = document.getElementById("useOllama");
     const trainingFormat = document.getElementById("trainingFormat");
     const maxTokens = document.getElementById("maxTokens");
     const temperature = document.getElementById("temperature");
+    const serveMode = document.getElementById("serveMode");
 
     const history = [];
     const onCloudflare =
@@ -288,6 +291,13 @@
         if (data.ok && data.unified_lora?.ok) {
           healthEl.className = "status ok";
           const eg = (data.unified_lora.available || []).join(", ") || "ake";
+          const raw = data.unified_lora.raw || {};
+          const mode = raw.load_in_4bit
+            ? "4-bit CUDA on P40 (~5–15s/reply)"
+            : raw.device === "cuda"
+              ? "CUDA"
+              : "CPU (often 1–2 min)";
+          if (serveMode) serveMode.textContent = "Serve: " + mode + ".";
           healthText.textContent = "Unified LoRA healthy · " + eg;
         } else {
           healthEl.className = "status err";
@@ -308,8 +318,8 @@
       const thinking = document.createElement("div");
       thinking.className = "msg system";
       thinking.textContent = onCloudflare
-        ? "Ake is forming a reply on r730 CPU (often 1–2 min; Cloudflare may cut off after ~100s)…"
-        : "Ake is forming a reply on r730 CPU (often 1–2 min)…";
+        ? "Ake is forming a reply on r730 (Cloudflare may 524 if CPU mode &gt;100s)…"
+        : "Ake is forming a reply on r730…";
       messagesEl.appendChild(thinking);
 
       try {
@@ -319,6 +329,7 @@
           body: JSON.stringify({
             message: text,
             history: history.slice(),
+            use_ollama: useOllama.checked,
             use_persona: !trainingFormat.checked,
             max_tokens: Number(maxTokens.value) || 256,
             temperature: Number(temperature.value),
@@ -333,9 +344,10 @@
         history.push({ role: "user", content: text });
         history.push({ role: "assistant", content: data.content });
         append("ake", data.content);
-        if (data.latency_ms) {
-          append("system", "lab-unified-lora · " + Math.round(data.latency_ms) + " ms");
-        }
+        const src = data.source || "lab-unified-lora";
+        let meta = src + " · " + Math.round(data.latency_ms || 0) + " ms";
+        if (data.quality_note) meta += " — " + data.quality_note;
+        append("system", meta);
       } catch (e) {
         thinking.remove();
         append("system", e.message || String(e));

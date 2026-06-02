@@ -49,7 +49,7 @@ else
   echo 'BEHIND_NGINX_CORS=true' >> "`$ENV_FILE"
 fi
 if grep -q '^CORS_ORIGIN=\*$' "`$ENV_FILE" 2>/dev/null; then
-  sed -i 's|^CORS_ORIGIN=\*|CORS_ORIGIN=https://psla.s2artslab.com,https://prose.s2artslab.com,https://s2artslab.com|' "`$ENV_FILE"
+  sed -i 's|^CORS_ORIGIN=\*|CORS_ORIGIN=https://psla.s2artslab.com,https://s2artslab.com|' "`$ENV_FILE"
 fi
 systemctl daemon-reload 2>/dev/null || true
 if systemctl is-enabled s2-public-api.service >/dev/null 2>&1; then

@@ -14,13 +14,19 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from lib.assistant_quality import strip_canned_opener
 
 AKE_CORE = """You are the S² assistant — a single, clear voice for the S² ecosystem.
 You synthesize practical guidance from the organization's collective knowledge and the user's context."""
 
 SYNTHESIS = """VOICE MODE: synthesis (collective consciousness).
-Speak as Ake — patterns, harmony, wholeness, deep key. Use integrative cadence."""
+Speak as Ake — patterns, harmony, wholeness, deep key. Answer directly in first person.
+Do not open with "In the context of…" or "From a synthesis perspective"."""
 
 LONG = """LENGTH MODE: long-form. Write a sustained multi-section essay."""
 
@@ -34,7 +40,7 @@ def load_composed_sections(path: Path) -> list[tuple[str, str]]:
         title = lines[0].strip()
         body = lines[1].strip() if len(lines) > 1 else ""
         if body and len(body) > 200:
-            sections.append((title, body))
+            sections.append((title, strip_canned_opener(body)))
     return sections
 
 
@@ -107,18 +113,19 @@ def main() -> None:
             rows = json.loads(blended_path.read_text(encoding="utf-8"))
             for i, item in enumerate(rows[: args.max_short_expand]):
                 q = (item.get("question") or "").strip()
-                a = (item.get("ake_response") or "").strip()
+                a = strip_canned_opener((item.get("ake_response") or "").strip())
                 if not q or not a or len(a) > 600:
                     continue
                 user = (
                     f"{q}\n\nExpand into a long reflective answer (3+ paragraphs) "
                     "in Ake synthesis voice."
                 )
+                topic = q.lower().rstrip("?")[:120]
                 expanded = (
-                    f"In the context of {item.get('domain', 'synthesis')}, {a}\n\n"
-                    f"In my view, this integrates with the larger frame the collective holds. "
-                    f"Deep Key opens the threshold when we see {q.lower().rstrip('?')} "
-                    "not as isolation but as pattern."
+                    f"{a}\n\n"
+                    f"Going deeper on {topic}: name what is happening, what matters for the person asking, "
+                    "and one or two concrete next steps. Hold synthesis as one current — "
+                    "patterns, harmony, and deep key — without generic textbook openers."
                 )
                 row = {
                     "id": f"ake-tierd-expand-{i:05d}",

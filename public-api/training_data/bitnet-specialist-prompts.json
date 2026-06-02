@@ -1,0 +1,14 @@
+[
+  {"id": "route-legal-general", "task_class": "routing", "context": "general", "user": "Classify as legal or general (one word only): How do I file a motion to dismiss?"},
+  {"id": "route-general-tech", "task_class": "routing", "context": "general", "user": "Classify as legal or general (one word only): How does vector search work in RAG?"},
+  {"id": "tag-urgency-high", "task_class": "tagging", "context": "general", "user": "Tag urgency (low/medium/high): Client needs response by tomorrow on contract review."},
+  {"id": "tag-urgency-low", "task_class": "tagging", "context": "general", "user": "Tag urgency (low/medium/high): Newsletter draft for next month."},
+  {"id": "summary-court", "task_class": "summary", "context": "general", "user": "Summarize in one sentence: The court denied the motion without prejudice and gave 14 days to amend."},
+  {"id": "summary-email", "task_class": "summary", "context": "general", "user": "Summarize in one sentence: Team agreed to ship the gateway fix Friday and run benchmarks over the weekend."},
+  {"id": "classify-intent", "task_class": "classification", "context": "general", "user": "Intent label only (one or two words): User asks for step-by-step instructions to reset their password."},
+  {"id": "classify-billing", "task_class": "classification", "context": "general", "user": "Intent label only: User wants to cancel subscription and get a refund."},
+  {"id": "compact-rag", "task_class": "compact", "context": "general", "user": "Answer in under 40 words: What is RAG in AI systems?"},
+  {"id": "compact-api", "task_class": "compact", "context": "general", "user": "Answer in under 40 words: What is a REST API?"},
+  {"id": "cheap-qa-capital", "task_class": "cheap_qa", "context": "general", "user": "One short sentence: What is the capital of France?"},
+  {"id": "cheap-qa-deadline", "task_class": "cheap_qa", "context": "general", "user": "One short sentence: How many days are typically allowed to respond to a motion?"}
+]

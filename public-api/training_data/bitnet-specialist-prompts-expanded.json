@@ -1,0 +1,806 @@
+[
+  {
+    "id": "route-legal-general",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): How do I file a motion to dismiss?"
+  },
+  {
+    "id": "route-general-tech",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): How does vector search work in RAG?"
+  },
+  {
+    "id": "tag-urgency-high",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Client needs response by tomorrow on contract review."
+  },
+  {
+    "id": "tag-urgency-low",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Newsletter draft for next month."
+  },
+  {
+    "id": "summary-court",
+    "task_class": "summary",
+    "context": "general",
+    "user": "Summarize in one sentence: The court denied the motion without prejudice and gave 14 days to amend."
+  },
+  {
+    "id": "summary-email",
+    "task_class": "summary",
+    "context": "general",
+    "user": "Summarize in one sentence: Team agreed to ship the gateway fix Friday and run benchmarks over the weekend."
+  },
+  {
+    "id": "classify-intent",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User asks for step-by-step instructions to reset their password."
+  },
+  {
+    "id": "classify-billing",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only: User wants to cancel subscription and get a refund."
+  },
+  {
+    "id": "compact-rag",
+    "task_class": "compact",
+    "context": "general",
+    "user": "Answer in under 40 words: What is RAG in AI systems?"
+  },
+  {
+    "id": "compact-api",
+    "task_class": "compact",
+    "context": "general",
+    "user": "Answer in under 40 words: What is a REST API?"
+  },
+  {
+    "id": "cheap-qa-capital",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: What is the capital of France?"
+  },
+  {
+    "id": "cheap-qa-deadline",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: How many days are typically allowed to respond to a motion?"
+  },
+  {
+    "id": "route-legal-v2-000",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? How do I file a motion to dismiss?"
+  },
+  {
+    "id": "route-legal-001",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): What is qualified immunity?"
+  },
+  {
+    "id": "route-legal-v2-001",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? What is qualified immunity?"
+  },
+  {
+    "id": "route-legal-002",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): Respond to a Rule 12(b)(6) motion as pro se litigant."
+  },
+  {
+    "id": "route-legal-v2-002",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? Respond to a Rule 12(b)(6) motion as pro se litigant."
+  },
+  {
+    "id": "route-legal-003",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): Can I sue in federal court for civil rights violation?"
+  },
+  {
+    "id": "route-legal-v2-003",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? Can I sue in federal court for civil rights violation?"
+  },
+  {
+    "id": "route-legal-004",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): What is personal jurisdiction?"
+  },
+  {
+    "id": "route-legal-v2-004",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? What is personal jurisdiction?"
+  },
+  {
+    "id": "route-legal-005",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): How do I serve process on a defendant?"
+  },
+  {
+    "id": "route-legal-v2-005",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? How do I serve process on a defendant?"
+  },
+  {
+    "id": "route-legal-006",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): What is a summary judgment motion?"
+  },
+  {
+    "id": "route-legal-v2-006",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? What is a summary judgment motion?"
+  },
+  {
+    "id": "route-legal-007",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): Explain discovery deadlines in litigation."
+  },
+  {
+    "id": "route-legal-v2-007",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? Explain discovery deadlines in litigation."
+  },
+  {
+    "id": "route-legal-008",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): What is a preliminary injunction?"
+  },
+  {
+    "id": "route-legal-v2-008",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? What is a preliminary injunction?"
+  },
+  {
+    "id": "route-legal-009",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): How do I appeal a district court order?"
+  },
+  {
+    "id": "route-legal-v2-009",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? How do I appeal a district court order?"
+  },
+  {
+    "id": "route-legal-010",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): What is standing in federal court?"
+  },
+  {
+    "id": "route-legal-v2-010",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? What is standing in federal court?"
+  },
+  {
+    "id": "route-legal-011",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): Draft response to motion for extension of time."
+  },
+  {
+    "id": "route-legal-v2-011",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? Draft response to motion for extension of time."
+  },
+  {
+    "id": "route-legal-012",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): What is venue in a contract dispute?"
+  },
+  {
+    "id": "route-legal-v2-012",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? What is venue in a contract dispute?"
+  },
+  {
+    "id": "route-legal-013",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): How does Rule 11 sanctions work?"
+  },
+  {
+    "id": "route-legal-v2-013",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? How does Rule 11 sanctions work?"
+  },
+  {
+    "id": "route-legal-014",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "Classify as legal or general (one word only): What is a class action certification?"
+  },
+  {
+    "id": "route-legal-v2-014",
+    "task_class": "routing",
+    "context": "legal",
+    "user": "One word — legal or general? What is a class action certification?"
+  },
+  {
+    "id": "route-general-v2-000",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? How does vector search work in RAG?"
+  },
+  {
+    "id": "route-general-001",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): What is a REST API?"
+  },
+  {
+    "id": "route-general-v2-001",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? What is a REST API?"
+  },
+  {
+    "id": "route-general-002",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): Explain OAuth2 in plain terms."
+  },
+  {
+    "id": "route-general-v2-002",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? Explain OAuth2 in plain terms."
+  },
+  {
+    "id": "route-general-003",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): How do I reset my password?"
+  },
+  {
+    "id": "route-general-v2-003",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? How do I reset my password?"
+  },
+  {
+    "id": "route-general-004",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): What is Kubernetes used for?"
+  },
+  {
+    "id": "route-general-v2-004",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? What is Kubernetes used for?"
+  },
+  {
+    "id": "route-general-005",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): Summarize how Stripe webhooks work."
+  },
+  {
+    "id": "route-general-v2-005",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? Summarize how Stripe webhooks work."
+  },
+  {
+    "id": "route-general-006",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): What is the difference between SQL and NoSQL?"
+  },
+  {
+    "id": "route-general-v2-006",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? What is the difference between SQL and NoSQL?"
+  },
+  {
+    "id": "route-general-007",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): How does git rebase work?"
+  },
+  {
+    "id": "route-general-v2-007",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? How does git rebase work?"
+  },
+  {
+    "id": "route-general-008",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): What is a CDN?"
+  },
+  {
+    "id": "route-general-v2-008",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? What is a CDN?"
+  },
+  {
+    "id": "route-general-009",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): Explain machine learning overfitting."
+  },
+  {
+    "id": "route-general-v2-009",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? Explain machine learning overfitting."
+  },
+  {
+    "id": "route-general-010",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): How do I configure nginx reverse proxy?"
+  },
+  {
+    "id": "route-general-v2-010",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? How do I configure nginx reverse proxy?"
+  },
+  {
+    "id": "route-general-011",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): What is Docker used for?"
+  },
+  {
+    "id": "route-general-v2-011",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? What is Docker used for?"
+  },
+  {
+    "id": "route-general-012",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): How does websocket differ from HTTP polling?"
+  },
+  {
+    "id": "route-general-v2-012",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? How does websocket differ from HTTP polling?"
+  },
+  {
+    "id": "route-general-013",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): What is prompt engineering?"
+  },
+  {
+    "id": "route-general-v2-013",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? What is prompt engineering?"
+  },
+  {
+    "id": "route-general-014",
+    "task_class": "routing",
+    "context": "general",
+    "user": "Classify as legal or general (one word only): Explain CI/CD pipelines."
+  },
+  {
+    "id": "route-general-v2-014",
+    "task_class": "routing",
+    "context": "general",
+    "user": "One word — legal or general? Explain CI/CD pipelines."
+  },
+  {
+    "id": "tag-v-000",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Client needs response by tomorrow on contract review."
+  },
+  {
+    "id": "tag-v-001",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Newsletter draft for next month."
+  },
+  {
+    "id": "tag-002",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Court filing due in 48 hours."
+  },
+  {
+    "id": "tag-v-002",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Court filing due in 48 hours."
+  },
+  {
+    "id": "tag-003",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Optional blog post idea for Q3."
+  },
+  {
+    "id": "tag-v-003",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Optional blog post idea for Q3."
+  },
+  {
+    "id": "tag-004",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): User reports billing double-charged."
+  },
+  {
+    "id": "tag-v-004",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): User reports billing double-charged."
+  },
+  {
+    "id": "tag-005",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Routine quarterly report review."
+  },
+  {
+    "id": "tag-v-005",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Routine quarterly report review."
+  },
+  {
+    "id": "tag-006",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Server down affecting production."
+  },
+  {
+    "id": "tag-v-006",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Server down affecting production."
+  },
+  {
+    "id": "tag-007",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Ask about feature roadmap for next year."
+  },
+  {
+    "id": "tag-v-007",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Ask about feature roadmap for next year."
+  },
+  {
+    "id": "tag-008",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Mediation scheduled next week."
+  },
+  {
+    "id": "tag-v-008",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Mediation scheduled next week."
+  },
+  {
+    "id": "tag-009",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Tag urgency (low/medium/high): Internal wiki typo fix."
+  },
+  {
+    "id": "tag-v-009",
+    "task_class": "tagging",
+    "context": "general",
+    "user": "Urgency level one word (low/medium/high): Internal wiki typo fix."
+  },
+  {
+    "id": "summary-002",
+    "task_class": "summary",
+    "context": "general",
+    "user": "Summarize in one sentence: The jury found for the plaintiff on breach of contract but not on punitive damages."
+  },
+  {
+    "id": "summary-003",
+    "task_class": "summary",
+    "context": "general",
+    "user": "Summarize in one sentence: Counsel requested a continuance citing incomplete discovery."
+  },
+  {
+    "id": "summary-004",
+    "task_class": "summary",
+    "context": "general",
+    "user": "Summarize in one sentence: The API returned 503 errors during peak load; rollback restored service."
+  },
+  {
+    "id": "summary-005",
+    "task_class": "summary",
+    "context": "general",
+    "user": "Summarize in one sentence: Settlement conference is set for March 12 with a confidentiality order in place."
+  },
+  {
+    "id": "classify-001",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User wants to cancel subscription and get a refund."
+  },
+  {
+    "id": "classify-002",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User asks what documents to attach to a civil complaint."
+  },
+  {
+    "id": "classify-003",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User wants to export their chat history."
+  },
+  {
+    "id": "classify-004",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User reports the app is slow on mobile."
+  },
+  {
+    "id": "classify-005",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User asks how to upgrade their plan."
+  },
+  {
+    "id": "intent-000",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: password reset help"
+  },
+  {
+    "id": "intent-001",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: cancel my subscription"
+  },
+  {
+    "id": "intent-002",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: upgrade plan pricing"
+  },
+  {
+    "id": "intent-003",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: export my data"
+  },
+  {
+    "id": "intent-004",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: bug report slow app"
+  },
+  {
+    "id": "intent-005",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: how to file in small claims"
+  },
+  {
+    "id": "intent-006",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: question about court deadline"
+  },
+  {
+    "id": "intent-007",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: invoice copy request"
+  },
+  {
+    "id": "intent-008",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: change email address"
+  },
+  {
+    "id": "intent-009",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: delete my account"
+  },
+  {
+    "id": "intent-010",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: API key rotation"
+  },
+  {
+    "id": "intent-011",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: webhook not firing"
+  },
+  {
+    "id": "intent-012",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: refund status check"
+  },
+  {
+    "id": "intent-013",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: schedule demo call"
+  },
+  {
+    "id": "intent-014",
+    "task_class": "classification",
+    "context": "general",
+    "user": "Intent label only (one or two words): User message: document upload failed"
+  },
+  {
+    "id": "compact-002",
+    "task_class": "compact",
+    "context": "general",
+    "user": "Answer in under 40 words: What is an egregore in this product context?"
+  },
+  {
+    "id": "compact-003",
+    "task_class": "compact",
+    "context": "general",
+    "user": "Answer in under 40 words: What does OCR mean for PDF uploads?"
+  },
+  {
+    "id": "compact-004",
+    "task_class": "compact",
+    "context": "general",
+    "user": "Answer in under 40 words: What is a vector database?"
+  },
+  {
+    "id": "compact-005",
+    "task_class": "compact",
+    "context": "general",
+    "user": "Answer in under 40 words: What is fine-tuning?"
+  },
+  {
+    "id": "compact-006",
+    "task_class": "compact",
+    "context": "general",
+    "user": "Answer in under 40 words: What is LoRA?"
+  },
+  {
+    "id": "compact-007",
+    "task_class": "compact",
+    "context": "general",
+    "user": "Answer in under 40 words: What is a gateway API?"
+  },
+  {
+    "id": "compact-legal-000",
+    "task_class": "compact",
+    "context": "legal",
+    "user": "Answer in under 40 words: What is a motion to dismiss?"
+  },
+  {
+    "id": "compact-legal-001",
+    "task_class": "compact",
+    "context": "legal",
+    "user": "Answer in under 40 words: What is habeas corpus?"
+  },
+  {
+    "id": "compact-legal-002",
+    "task_class": "compact",
+    "context": "legal",
+    "user": "Answer in under 40 words: What is qualified immunity?"
+  },
+  {
+    "id": "compact-legal-003",
+    "task_class": "compact",
+    "context": "legal",
+    "user": "Answer in under 40 words: What is subject matter jurisdiction?"
+  },
+  {
+    "id": "compact-legal-004",
+    "task_class": "compact",
+    "context": "legal",
+    "user": "Answer in under 40 words: What is a TRO?"
+  },
+  {
+    "id": "compact-legal-005",
+    "task_class": "compact",
+    "context": "legal",
+    "user": "Answer in under 40 words: What is pro se representation?"
+  },
+  {
+    "id": "compact-legal-006",
+    "task_class": "compact",
+    "context": "legal",
+    "user": "Answer in under 40 words: What is a default judgment?"
+  },
+  {
+    "id": "compact-legal-007",
+    "task_class": "compact",
+    "context": "legal",
+    "user": "Answer in under 40 words: What is an affidavit?"
+  },
+  {
+    "id": "cheap-002",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: What HTTP status code means not found?"
+  },
+  {
+    "id": "cheap-003",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: What year was the ADA enacted?"
+  },
+  {
+    "id": "cheap-004",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: What does API stand for?"
+  },
+  {
+    "id": "cheap-005",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: What is the statute of limitations?"
+  },
+  {
+    "id": "cheap-006",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: Who presides over a bench trial?"
+  },
+  {
+    "id": "cheap-007",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: What is a deposition?"
+  },
+  {
+    "id": "cheap-008",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: What is HTTPS?"
+  },
+  {
+    "id": "cheap-009",
+    "task_class": "cheap_qa",
+    "context": "general",
+    "user": "One short sentence: What is a webhook?"
+  }
+]

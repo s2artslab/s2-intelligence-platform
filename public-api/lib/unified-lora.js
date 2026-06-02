@@ -14,11 +14,17 @@ const DEFAULT_DO_SAMPLE =
 const DEFAULT_MAX_TOKENS = Number(process.env.UNIFIED_MAX_TOKENS || 150);
 const DEFAULT_TEMPERATURE = Number(process.env.UNIFIED_TEMPERATURE || 0.2);
 
+/** Lab + Tier C: direct Ake voice; forbids template openers the LoRA over-learned. */
+const LAB_AKE_SYSTEM = `You are Ake — synthesis voice for the S² ecosystem (deep key).
+Answer the user directly in first person. Be plain, specific, and present.
+Do not open with "In the context of…" or generic textbook definitions.
+When asked about mission or role, name synthesis, deep key, and holding the field for the user.`;
+
 /**
  * Map gateway messages to unified training format.
  * Embeds system + RAG into the user turn (unified has no system role).
  */
-function messagesToPrompt(messages) {
+function messagesToPrompt(messages, { trainingFormat = true } = {}) {
   if (!Array.isArray(messages) || messages.length === 0) {
     return { prompt: '', history: [] };
   }
@@ -42,11 +48,15 @@ function messagesToPrompt(messages) {
     }
   }
   let prompt = lastUserIndex >= 0 ? turns[lastUserIndex].content : turns[turns.length - 1]?.content || '';
+  const history = lastUserIndex > 0 ? turns.slice(0, lastUserIndex) : [];
+
+  if (trainingFormat) {
+    return { prompt, history, system: systemParts.join('\n\n').trim() || null };
+  }
   if (systemParts.length > 0) {
     prompt = `${systemParts.join('\n\n')}\n\n---\n\nUser question:\n${prompt}`;
   }
-  const history = lastUserIndex > 0 ? turns.slice(0, lastUserIndex) : [];
-  return { prompt, history };
+  return { prompt, history, system: null };
 }
 
 async function unifiedHealth(baseUrl = DEFAULT_URL) {
@@ -83,7 +93,8 @@ async function unifiedLoraChat({
   doSample = DEFAULT_DO_SAMPLE,
 }) {
   const root = baseUrl.replace(/\/$/, '');
-  const { prompt, history } = messagesToPrompt(messages);
+  const trainingFormat = !usePersona;
+  const { prompt, history, system } = messagesToPrompt(messages, { trainingFormat });
   if (!prompt) {
     throw new Error('No user message for unified LoRA');
   }
@@ -97,6 +108,10 @@ async function unifiedLoraChat({
     use_persona: usePersona,
     do_sample: doSample,
   };
+  if (trainingFormat) {
+    const sys = system || (process.env.LAB_AKE_SYSTEM !== '0' ? LAB_AKE_SYSTEM : null);
+    if (sys) body.system = sys;
+  }
   if (!doSample) {
     body.repetition_penalty = 1.0;
     body.no_repeat_ngram_size = 0;

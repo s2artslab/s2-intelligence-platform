@@ -5,7 +5,6 @@
 
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://psla.s2artslab.com',
-  'https://prose.s2artslab.com',
   'https://s2artslab.com',
   'https://www.s2artslab.com',
   'https://app.s2artslab.com',

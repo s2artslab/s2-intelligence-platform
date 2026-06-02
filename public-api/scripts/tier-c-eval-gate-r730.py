@@ -19,6 +19,8 @@ import urllib.request
 
 DEBRIS_PATTERNS = [
     re.compile(r"2:\s*Hello,\s*world", re.I),
+    re.compile(r"^In the context of\b", re.I),
+    re.compile(r"^From a \w+ perspective", re.I),
     re.compile(r"\barchitecture\b", re.I),
     re.compile(r"^#{1,3}\s", re.M),
     re.compile(r"egregore\s*\d+", re.I),
@@ -49,19 +51,18 @@ def post_json(url: str, body: dict, timeout: int) -> dict:
         return json.loads(resp.read().decode())
 
 
-def unified_generate(base: str, prompt: str, timeout: int) -> str:
+def unified_generate(base: str, prompt: str, timeout: int, *, raw: bool = False) -> str:
     root = base.rstrip("/")
-    out = post_json(
-        f"{root}/generate",
-        {
-            "egregore": "ake",
-            "prompt": prompt,
-            "use_persona": False,
-            "do_sample": False,
-            "max_length": 150,
-        },
-        timeout,
-    )
+    body = {
+        "egregore": "ake",
+        "prompt": prompt,
+        "use_persona": False,
+        "do_sample": False,
+        "max_length": 150,
+    }
+    if raw:
+        body["skip_response_cleanup"] = True
+    out = post_json(f"{root}/generate", body, timeout)
     return (out.get("response") or out.get("text") or "").strip()
 
 
@@ -100,6 +101,16 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=300)
     ap.add_argument("--skip-ollama", action="store_true")
     ap.add_argument("--skip-gateway", action="store_true")
+    ap.add_argument(
+        "--lab-chat",
+        action="store_true",
+        help="Smoke-test POST /api/lab/unified-lora/chat (no billing; preferred over hosted gateway)",
+    )
+    ap.add_argument(
+        "--raw-lora",
+        action="store_true",
+        help="Unified /generate with skip_response_cleanup (measure true LoRA without serve strip)",
+    )
     args = ap.parse_args()
 
     failures = []
@@ -119,11 +130,12 @@ def main() -> int:
             print(" ", f)
         return 1
 
-    print("=== Short prompts (unified) ===")
+    mode = "RAW (no serve cleanup)" if args.raw_lora else "with serve cleanup"
+    print(f"=== Short prompts (unified, {mode}) ===")
     short_ok = 0
     for p in SHORT_PROMPTS:
         try:
-            text = unified_generate(args.unified_url, p, args.timeout)
+            text = unified_generate(args.unified_url, p, args.timeout, raw=args.raw_lora)
         except Exception as e:
             failures.append(f"short '{p[:40]}': {e}")
             print(f"FAIL {p!r}: {e}")
@@ -136,11 +148,11 @@ def main() -> int:
             short_ok += 1
             print(f"OK   {p!r}: {text[:80]}...")
 
-    print("\n=== Training-format prompts (unified) ===")
+    print(f"\n=== Training-format prompts (unified, {mode}) ===")
     train_ok = 0
     for p in TRAINING_PROMPTS:
         try:
-            text = unified_generate(args.unified_url, p, args.timeout)
+            text = unified_generate(args.unified_url, p, args.timeout, raw=args.raw_lora)
         except Exception as e:
             failures.append(f"train '{p[:40]}': {e}")
             print(f"FAIL {p!r}: {e}")
@@ -175,8 +187,46 @@ def main() -> int:
         except Exception as e:
             print(f"WARN ollama unreachable: {e}")
 
+    if args.lab_chat:
+        print("\n=== Lab gateway chat (unified LoRA, no billing) ===")
+        try:
+            body = json.dumps(
+                {
+                    "message": "In two sentences, what is a motion to dismiss?",
+                    "max_tokens": 120,
+                    "use_persona": False,
+                }
+            ).encode()
+            req = urllib.request.Request(
+                f"{args.gateway_url.rstrip('/')}/api/lab/unified-lora/chat",
+                data=body,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=args.timeout) as resp:
+                data = json.loads(resp.read().decode())
+            content = str(data.get("content") or data.get("response") or "").strip()
+            source = data.get("source", "")
+            if not data.get("ok"):
+                failures.append(f"lab chat: {data.get('error', data)}")
+                print(f"FAIL lab chat: {data}")
+            else:
+                errs = check_response(content, min_len=40)
+                if errs:
+                    failures.append(f"lab chat: {errs}")
+                    print(f"FAIL lab chat: {errs}\n  got: {content[:120]!r}")
+                else:
+                    print(f"OK   lab source={source} latency_ms={data.get('latency_ms')} : {content[:80]}...")
+        except urllib.error.HTTPError as e:
+            body = e.read().decode()[:200]
+            failures.append(f"lab chat HTTP {e.code}: {body}")
+            print(f"FAIL lab chat HTTP {e.code}: {body}")
+        except Exception as e:
+            failures.append(f"lab chat: {e}")
+            print(f"FAIL lab chat: {e}")
+
     if not args.skip_gateway:
-        print("\n=== Gateway hosted smoke ===")
+        print("\n=== Gateway hosted smoke (billing) ===")
         try:
             body = json.dumps(
                 {

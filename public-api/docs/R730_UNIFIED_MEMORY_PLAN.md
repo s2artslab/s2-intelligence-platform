@@ -15,7 +15,9 @@
 | **Lab 7B fp16 CUDA** | `setup-unified-7b-r730.sh` | `cuda` | `0` | **OOM risk** on P40 — avoid |
 | **Legacy GPT-2** | `setup-unified-8100-r730.sh` | `cpu` | `0` | BIPRA GPT-2 weights only |
 
-Auto after Tier C: `enable-unified-4bit-after-tier-c-r730.sh` (waits for train + VRAM, then runs 4-bit setup).
+**Lab window (recommended):** `lab-lora-window-on-r730.sh` / `lab-lora-window-off-r730.sh` — see [LAB_LORA_WINDOW.md](./LAB_LORA_WINDOW.md).
+
+Auto after Tier C: `enable-unified-4bit-after-tier-c-r730.sh` (waits for train; `STOP_COMFY=1` default).
 
 \*Use 7B on CPU only for eval/benchmarks; expect 30s–120s per reply. Not for production hosted latency.
 

@@ -7,8 +7,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node --check lib/prompts.js && node --check lib/ollama.js && node --check lib/unified-lora.js && node --check lib/rag.js && node --check lib/canon.js && node --check lib/cadence-router.js && node --check lib/retrieval-index.js && node --check lib/continuity.js && node --check lib/morphic-resonance.js && node --check lib/ensemble-collapse.js && node --check lib/consciousness-metrics.js && node --check lib/memory/tension-store.js && node --check lib/memory/reflection.js && node --check lib/billing.js",
+    "check": "node --check server.js && node --check lib/prompts.js && node --check lib/ollama.js && node --check lib/unified-lora.js && node --check lib/bitnet.js && node --check lib/inference-lane-router.js && node --check lib/bitnet-research-metrics.js && node --check lib/rag.js && node --check lib/canon.js && node --check lib/cadence-router.js && node --check lib/retrieval-index.js && node --check lib/continuity.js && node --check lib/morphic-dimension.js && node --check lib/inference-profile.js && node --check lib/morphic-resonance.js && node --check lib/ensemble-collapse.js && node --check lib/consciousness-metrics.js && node --check lib/memory/tension-store.js && node --check lib/memory/reflection.js && node --check lib/billing.js",
     "smoke:morphic": "node scripts/smoke-morphic-ensemble.js",
+    "smoke:bitnet": "node scripts/smoke-bitnet-research.js",
     "build:retrieval-index": "node scripts/build-retrieval-index.js"
   },
   "engines": {

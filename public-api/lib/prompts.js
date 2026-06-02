@@ -138,13 +138,17 @@ function appendContinuityBlocks(systemContent, continuity = {}) {
 
 /**
  * Build OpenAI-style messages for the gateway.
- * Always uses Ake; ignores client egregore_id for assembly (logged internally only).
+ * When egregore_id is set (EgregoreLab / custom), prepends persona block; RAG shared across lanes.
  */
 function buildGatewayMessages(body, ragBlock = '', continuity = {}) {
   const context = body.context || 'general';
   const voiceMode = resolveVoiceMode(body);
   const longForm = isLongFormRequest(body);
-  const system = systemPromptForContext(context, {
+  const egregoreId = String(body.egregore_id || body.egregore || 'ake')
+    .trim()
+    .toLowerCase();
+
+  let system = systemPromptForContext(context, {
     jurisdiction: body.jurisdiction,
     claimType: body.claim_type || body.claimType,
     caseContext: body.case_context || body.caseContext,
@@ -154,6 +158,16 @@ function buildGatewayMessages(body, ragBlock = '', continuity = {}) {
     voiceMode,
     longForm,
   });
+
+  if (egregoreId && egregoreId !== 'ake') {
+    try {
+      const { egregoreSystemBlock } = require('./egregore-registry');
+      const block = egregoreSystemBlock(egregoreId);
+      if (block) system = `${block}\n\n${system}`;
+    } catch {
+      /* registry optional in dev */
+    }
+  }
 
   let systemContent = appendContinuityBlocks(system, continuity);
   if (ragBlock?.trim()) {

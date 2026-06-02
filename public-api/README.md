@@ -12,6 +12,8 @@ See [HOSTED_AKE_GATEWAY.md](./HOSTED_AKE_GATEWAY.md) for architecture and deploy
 
 **Operator status (LoRA / Ollama / Tier C):** [docs/AKE_LORA_STATUS.md](./docs/AKE_LORA_STATUS.md)
 
+**Cursor + r730 (SSH tunnel, local models):** [docs/CURSOR_R730_ALIGNMENT.md](./docs/CURSOR_R730_ALIGNMENT.md)
+
 ## Quick start
 
 ```bash
@@ -25,6 +27,13 @@ Create the Ollama model (on the GPU host):
 
 ```powershell
 .\scripts\create-s2-ake-model.ps1
+```
+
+From a workstation (r730 inference ports blocked on LAN — use SSH tunnel):
+
+```powershell
+.\scripts\start-r730-inference-tunnel.ps1   # separate terminal
+.\scripts\verify-r730-inference-tunnel.ps1
 ```
 
 ## Inference modes

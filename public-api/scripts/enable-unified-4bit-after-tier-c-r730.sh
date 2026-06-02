@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Wait for Tier C train to release GPU, then switch unified :8100 to 4-bit CUDA serve.
-# Does not stop ComfyUI; requires ~10 GB free VRAM on P40 (24 GB total).
+# Prefer lab-lora-window-on-r730.sh (stops Comfy + clears stuck train).
+# Set STOP_COMFY=1 to stop ComfyUI before enable (default 1).
 set -euo pipefail
 
 API_DIR=/opt/s2-ecosystem/public-api
 LOG=/var/log/s2-ake-tier-c-train.log
-MIN_FREE_MIB="${MIN_FREE_MIB:-10240}"
+STOP_COMFY="${STOP_COMFY:-1}"
+MIN_FREE_MIB="${MIN_FREE_MIB:-8192}"
 POLL_SEC="${POLL_SEC:-30}"
 MAX_WAIT_MIN="${MAX_WAIT_MIN:-180}"
 
@@ -37,6 +39,11 @@ fi
 
 if [[ -f "$LOG" ]] && ! grep -q "'epoch': 2" "$LOG" 2>/dev/null; then
   echo "WARN: log does not show epoch 2.0 complete — verify weights before serving."
+fi
+
+if [[ "$STOP_COMFY" == "1" ]] && systemctl is-active --quiet comfyui.service; then
+  echo "Stopping comfyui.service for VRAM..."
+  systemctl stop comfyui.service
 fi
 
 echo "Waiting for GPU headroom..."

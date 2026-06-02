@@ -50,6 +50,17 @@ Tunnel: `https://egregorelab.s2artslab.com` → `:37592`
 
 Code: `egregorelab/services/media/hq_image_pipeline.py`
 
+### Day / night on r730 (hosted + training)
+
+Single P40 — **generation by day, training by night**. Full subscriber copy: `ninefold-studio-clean/docs/S2_GPU_DAY_NIGHT.md`.
+
+| Window (r730, America/Adak) | Comfy | Hosted subscribers | Egregore trainers |
+|-----------------------------|-------|--------------------|-------------------|
+| **~06:00–02:00** | On | Comfy FLUX/SDXL/SVD | Use `s2-gpu-media` — no training on P40 |
+| **~02:00–06:00** | Off | HF platform fallback if `S2_PLATFORM_HF_ENABLED=1` | LoRA / QLoRA — `s2-gpu-chat.target` |
+
+**BYOK:** `X-HF-Token` works 24/7 on your key, independent of this schedule.
+
 ---
 
 ## Infographic slides (composite layout)
