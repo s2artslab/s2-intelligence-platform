@@ -107,6 +107,7 @@ const LONG_FORM_PREFER_OLLAMA = process.env.HOSTED_LONG_FORM_PREFER_OLLAMA !== '
 const UNIFIED_LONG_FORM_MAX_TOKENS = Number(process.env.UNIFIED_LONG_FORM_MAX_TOKENS || 512);
 const LAB_UNIFIED_CHAT =
   process.env.LAB_UNIFIED_CHAT === 'true' || process.env.LAB_HOSTED_UNLOCK === 'true';
+const HOSTED_MAINTENANCE_MESSAGE = (process.env.HOSTED_MAINTENANCE_MESSAGE || '').trim();
 
 const app = express();
 app.use(buildCorsMiddleware());
@@ -385,6 +386,10 @@ app.get('/api/public/capability', async (req, res) => {
   const hostedReady =
     (PREFER_UNIFIED_LORA && unified.ok) ||
     (ollama.ok && ollama.hasConfiguredModel);
+  const hostedMaintenanceMessage = !hostedReady
+    ? HOSTED_MAINTENANCE_MESSAGE ||
+      'Hosted Ake (Qwen) is offline — usually model training or GPU work on r730 (ComfyUI, Piper, voice). Try again later or use a Groq API key.'
+    : null;
 
   res.json({
     assistant_name: 'S² Assistant',
@@ -392,6 +397,8 @@ app.get('/api/public/capability', async (req, res) => {
     rag_chunks: rag.chunkCount,
     system_prompt_available: true,
     hosted_available: hostedReady,
+    hosted_maintenance: !hostedReady,
+    hosted_maintenance_message: hostedMaintenanceMessage,
     groq_configured: hasKey,
     user_groq_required: !LAB_GROQ_KEY && !hostedReady,
     ollama_configured: ollama.ok,
