@@ -157,6 +157,33 @@ function ownerIdFrom(req) {
   ).trim();
 }
 
+function billingOptionsFrom(req) {
+  const egregoreId =
+    req.body?.egregore_id ||
+    req.body?.egregore ||
+    req.get('X-S2-Egregore-Id') ||
+    HOSTED_EGREGORE;
+  const body = req.body || {};
+  return {
+    egregoreId: normalizeId(egregoreId),
+    appId:
+      req.get('X-S2-Bound-App') ||
+      req.get('X-Daoflow-Bound-App') ||
+      body.app_id ||
+      body.appId,
+    walletAddress:
+      req.get('X-S2-Wallet-Address') ||
+      body.wallet_address ||
+      body.walletAddress,
+    longForm: isLongFormRequest(body),
+    inferenceLane: resolveInferenceLane(body, req),
+    idempotency:
+      req.get('X-S2-Idempotency-Key') ||
+      body.idempotency ||
+      body.idempotencyKey,
+  };
+}
+
 /** Standalone lab UI — direct unified LoRA (:8100), not production hosted Ollama. */
 app.get('/lab/ake-unified-lora', (_req, res) => {
   res.setHeader('X-Frame-Options', 'DENY');
@@ -427,12 +454,16 @@ async function handleChat(req, res) {
     const productId =
       req.get('X-S2-Product-Id') || req.body?.product_id || DEFAULT_PRODUCT;
 
+    const billingOpts = billingOptionsFrom(req);
+    let billingCharge = null;
     if (useHosted) {
-      await verifyHostedEntitlement(ownerId, productId);
+      billingCharge = await verifyHostedEntitlement(ownerId, productId, billingOpts);
     }
 
     const userQuery = lastUserText(req.body);
-    const egregoreId = normalizeId(req.body.egregore_id || req.body.egregore || HOSTED_EGREGORE);
+    const egregoreId = normalizeId(
+      req.body.egregore_id || req.body.egregore || billingOpts.egregoreId || HOSTED_EGREGORE,
+    );
     const morphicPolicy = resolveMorphicPolicy(req.body);
     const longForm = isLongFormRequest(req.body);
     const voiceMode = resolveVoiceMode(req.body);
@@ -663,6 +694,15 @@ async function handleChat(req, res) {
       inference_source: morphicPolicy.source,
       ensemble: ensembleMeta,
       ...longFormMeta,
+      billing: billingCharge
+        ? {
+            accessPath: billingCharge.accessPath,
+            charged: billingCharge.charged === true,
+            s2eCharged: billingCharge.s2eCharged,
+            balanceS2e: billingCharge.balanceS2e,
+            operationId: billingCharge.operationId,
+          }
+        : null,
       processing_time_ms: Date.now() - started,
     });
   } catch (e) {
@@ -671,6 +711,9 @@ async function handleChat(req, res) {
       success: false,
       error: e.message,
       content: '',
+      s2eRequired: e.s2eRequired,
+      balanceS2e: e.balanceS2e,
+      catalog: e.catalog,
     });
   }
 }
@@ -685,13 +728,21 @@ app.get('/api/public/egregore/inference', (_req, res) => {
     success: true,
     egregores: listEgregores(),
     lanes: {
-      hosted: 'Ollama 4-bit / unified LoRA + RAG',
+      hosted: 'Ollama Qwen MoE (Ake) / unified LoRA + RAG on r730',
       bitnet: 'BitNet b1.58 sidecar + RAG (compact)',
       auto: 'BitNet when adapter exists, else hosted',
+    },
+    access: {
+      subscription: 's2-hosted-single / s2-hosted-ecosystem — r730 included, no per-call debit',
+      payPerUse: 'Buy S2E credits — each prompt/generation debits (see billing catalog)',
+      billingCatalog: '/api/billing/inference/catalog',
+      billingCharge: 'POST /api/billing/inference/charge',
     },
     headers: {
       lane: 'X-S2-Inference-Lane: hosted | bitnet | auto',
       task: 'X-S2-Task-Class: compact | summary | …',
+      owner: 'X-Owner-Id (required for r730)',
+      egregore: 'X-S2-Egregore-Id or body egregore_id',
     },
   });
 });
@@ -906,7 +957,7 @@ app.post('/api/psla/exploration/paths', async (req, res) => {
       req.get('X-S2-Product-Id') || req.body?.product_id || 'psla-exploration';
 
     if (useHosted) {
-      await verifyHostedEntitlement(ownerId, productId);
+      await verifyHostedEntitlement(ownerId, productId, billingOptionsFrom(req));
     }
 
     const userQuery =
@@ -961,7 +1012,7 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
       req.get('X-S2-Product-Id') || req.body?.product_id || 'psla-exploration';
 
     if (useHosted) {
-      await verifyHostedEntitlement(ownerId, productId);
+      await verifyHostedEntitlement(ownerId, productId, billingOptionsFrom(req));
     }
 
     const userQuery = lastUserText(req.body);
@@ -1075,6 +1126,7 @@ app.post('/api/psla/exploration/material-digest', async (req, res) => {
       await verifyHostedEntitlement(
         ownerIdFrom(req),
         req.get('X-S2-Product-Id') || 'psla-exploration',
+        billingOptionsFrom(req),
       );
     }
 

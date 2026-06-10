@@ -20,8 +20,8 @@ flowchart LR
 
 | Path | Headers | Compute |
 |------|---------|---------|
-| Hosted | `X-S2-Inference: hosted`, `X-Owner-Id`, `X-S2-Product-Id` | Ollama `s2-ake` after billing check |
-| BYOK | `X-Groq-Api-Key` | Groq with same templates + RAG |
+| Hosted | `X-S2-Inference: hosted`, `X-Owner-Id`, `X-S2-Product-Id` | Ollama `s2-ake` / Qwen MoE — subscriber included, else **S2E debit per prompt** |
+| BYOK | `X-Groq-Api-Key` | Groq with same templates + RAG (no r730) |
 
 Apps must **not** call Ollama directly when `USE_HOSTED_GATEWAY=true` (PSLA production default).
 

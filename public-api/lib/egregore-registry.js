@@ -94,6 +94,21 @@ function hasBitnetAdapter(egregoreId) {
   return fs.existsSync(adapter);
 }
 
+const PAY_PER_USE_S2E = {
+  ake: { operationId: 'ake_chat', s2e: '12', pegUsd: '0.03', model: 'qwen3:30b-a3b' },
+  ninefold: { operationId: 'ninefold_chat', s2e: '20', pegUsd: '0.05' },
+  egregore: { operationId: 'egregore_chat', s2e: '28', pegUsd: '0.07' },
+};
+
+function priceForEgregore(egregoreId) {
+  const id = normalizeId(egregoreId);
+  if (id === 'ake') return { ...PAY_PER_USE_S2E.ake, requiresR730Gpu: true };
+  if (NINEFOLD_CANON.has(id) && id !== 'ake') {
+    return { ...PAY_PER_USE_S2E.ninefold, requiresR730Gpu: true };
+  }
+  return { ...PAY_PER_USE_S2E.egregore, requiresR730Gpu: true };
+}
+
 function listEgregores() {
   _reloadIfStale();
   const ids = new Set([
@@ -103,6 +118,7 @@ function listEgregores() {
   ]);
   return [...ids].sort().map((id) => {
     const profile = getProfile(id);
+    const price = priceForEgregore(id);
     return {
       egregore_id: id,
       name: profile?.name || id,
@@ -112,6 +128,11 @@ function listEgregores() {
         hosted: true,
         bitnet: hasBitnetAdapter(id),
         unified_lora: NINEFOLD_CANON.has(id) || Boolean(_manifest?.egregores?.[id]?.unified_lora),
+      },
+      r730_pricing: {
+        ...price,
+        billingMode: 's2e_pay_per_use',
+        subscriptionIncluded: true,
       },
     };
   });
@@ -155,6 +176,7 @@ module.exports = {
   normalizeId,
   getProfile,
   hasBitnetAdapter,
+  priceForEgregore,
   listEgregores,
   egregoreSystemBlock,
   writeManifestEntry,
