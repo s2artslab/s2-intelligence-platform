@@ -24,7 +24,7 @@ function parseArgs(argv) {
 
 async function main() {
   const args = parseArgs(process.argv);
-  const base = process.env.S2_GATEWAY_URL || 'http://127.0.0.1:3010';
+  const base = process.env.S2_GATEWAY_URL || 'http://127.0.0.1:3020';
   const key = process.env.KNOWLEDGE_INGEST_KEY || process.env.STRATEGIST_HUB_API_KEY || '';
 
   let pack;
