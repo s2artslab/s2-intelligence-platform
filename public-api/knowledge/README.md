@@ -1,20 +1,28 @@
-# Collective knowledge (RAG corpus)
+# S² collective knowledge (gateway RAG)
 
-Files here are loaded at API startup into an in-memory index (`lib/rag.js`).
+Chunks in this tree feed `lib/retrieval-index.js` → `lib/rag.js` on the public API.
 
-## Formats
+## Layout
 
-- **Markdown** (`.md`) — split on `##` headings; each section becomes a chunk.
-- **JSON** (`.json`) — `{ "chunks": [{ "id", "text", "tags": [] }] }`.
+| Path | Namespaces |
+|------|------------|
+| `*.md` / `*.json` (root) | From `meta.json` |
+| `products/{app-id}/*.md` | `product:{app-id}`, `s2-canon` |
+| `data/private-rag/` | Per-owner / per-matter (not in git) |
 
-## Adding content
+## Ingest
 
-1. Add or edit files in this directory.
-2. Restart `public-api` (or redeploy).
-3. Confirm `GET /api/public/capability` shows `rag_available: true`.
+```bash
+# Publish a pack (Forge CI)
+node scripts/publish-forge-knowledge-pack.js --app s2forge --readme ./README.md
 
-Keep chunks factual and app-safe. Do not put user PII or secrets here.
+# Internal API
+curl -X POST http://127.0.0.1:3010/api/internal/knowledge/publish-pack \
+  -H "X-API-Key: $KNOWLEDGE_INGEST_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"product_id":"allies-and-artists","chunks":[{"text":"..."}]}'
+```
 
-## Tags
+## Clients
 
-Use `tags` in JSON chunks to boost retrieval (e.g. `legal`, `billing`, `hosted`).
+Send `product_id` and optional `rag_namespaces` on chat requests. Beta apps set `X-S2-Product-Id` via `s2-beta-shell.js`.

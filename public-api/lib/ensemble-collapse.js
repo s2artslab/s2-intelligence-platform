@@ -79,14 +79,14 @@ function resolveEnsembleMode(body, req) {
   return 'cheap';
 }
 
-function buildPathMessages(body, userQuery, ownerId, context, morphicPolicy) {
+async function buildPathMessages(body, userQuery, ownerId, context, morphicPolicy) {
   const pathBody = {
     ...body,
     context,
     rag_limit: body.rag_limit ?? morphicPolicy.ragLimit,
     rag_max_chars: body.rag_max_chars ?? morphicPolicy.ragMaxChars,
   };
-  const continuity = assembleContinuity(pathBody, userQuery, ownerId, morphicPolicy);
+  const continuity = await assembleContinuity(pathBody, userQuery, ownerId, morphicPolicy);
   const messages = pathBody.exploration
     ? buildExplorationChatMessages(pathBody, continuity.rag.text)
     : buildGatewayMessages(pathBody, continuity.rag.text, {

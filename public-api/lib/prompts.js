@@ -9,6 +9,11 @@ Be direct, accurate, and calm. Use plain language. When uncertain, say so.
 Do not invent citations, case names, or statutes. Do not role-play multiple characters or name internal system components unless the user asks how the product works.
 Stay helpful without being theatrical.`;
 
+/** Default length discipline — omitted for long_form requests. */
+const AKE_BREVITY_OVERLAY = `LENGTH (default): Match the question's scale.
+Short or factual questions: one to two tight paragraphs, or a brief bullet list when steps help.
+Do not pad with preambles, throat-clearing, or recap paragraphs unless the user asks for depth, analysis, a walkthrough, or long-form output.`;
+
 const LEGAL_OVERLAY = `You are helping someone representing themselves in court (pro se).
 Provide legal information and research support, not legal advice. You are not a licensed attorney.
 
@@ -23,7 +28,7 @@ YOUR CORE PRINCIPLES:
 Format with clear headings and bullet points when it aids scanning.`;
 
 const GENERAL_OVERLAY = `Answer the user's question using retrieved reference material when it is relevant.
-Prefer actionable steps. Keep responses appropriately concise unless the user asks for depth.`;
+Prefer actionable steps. Default to proportional length — short questions get short answers unless depth is requested.`;
 
 /** Synthesis / collective voice — matches egregore training corpus (patterns, harmony, wholeness). */
 const AKE_SYNTHESIS_OVERLAY = `VOICE MODE: synthesis (collective consciousness).
@@ -75,24 +80,54 @@ function isLongFormRequest(body = {}) {
   return false;
 }
 
-function resolveMaxTokens(body = {}) {
-  if (isLongFormRequest(body)) {
-    return Number(
-      body.max_tokens ??
-        body.maxTokens ??
-        process.env.HOSTED_LONG_FORM_MAX_TOKENS ??
-        4096,
-    );
+function extractLastUserMessage(body = {}) {
+  if (body.text || body.user_message) {
+    return String(body.text || body.user_message);
   }
-  return Number(
-    body.max_tokens ?? body.maxTokens ?? process.env.HOSTED_DEFAULT_MAX_TOKENS ?? 800,
-  );
+  const msgs = body.messages;
+  if (Array.isArray(msgs)) {
+    for (let i = msgs.length - 1; i >= 0; i -= 1) {
+      const m = msgs[i];
+      const role = m?.role || 'user';
+      if (m?.content && role !== 'system' && role !== 'assistant') {
+        return String(m.content);
+      }
+    }
+  }
+  if (Array.isArray(body.history)) {
+    for (let i = body.history.length - 1; i >= 0; i -= 1) {
+      const h = body.history[i];
+      if (h?.content && h.role !== 'assistant') {
+        return String(h.content);
+      }
+    }
+  }
+  return '';
+}
+
+function resolveMaxTokens(body = {}) {
+  const explicit = body.max_tokens ?? body.maxTokens;
+  if (explicit != null && explicit !== '') {
+    return Number(explicit);
+  }
+  if (isLongFormRequest(body)) {
+    return Number(process.env.HOSTED_LONG_FORM_MAX_TOKENS ?? 4096);
+  }
+  const shortChars = Number(process.env.HOSTED_SHORT_USER_CHARS ?? 120);
+  const userText = extractLastUserMessage(body);
+  if (userText.length > 0 && userText.length <= shortChars) {
+    return Number(process.env.HOSTED_SHORT_MAX_TOKENS ?? 384);
+  }
+  return Number(process.env.HOSTED_DEFAULT_MAX_TOKENS ?? 640);
 }
 
 function systemPromptForContext(context = 'general', options = {}) {
   const ctx = String(context || 'general').toLowerCase();
   const overlay = CONTEXT_OVERLAYS[ctx] || CONTEXT_OVERLAYS.general;
   const parts = [AKE_CORE, overlay];
+  if (!options.longForm) {
+    parts.push(AKE_BREVITY_OVERLAY);
+  }
   if (options.voiceMode === 'synthesis') {
     parts.push(AKE_SYNTHESIS_OVERLAY);
   }
@@ -202,6 +237,7 @@ function buildGatewayMessages(body, ragBlock = '', continuity = {}) {
 
 module.exports = {
   AKE_CORE,
+  AKE_BREVITY_OVERLAY,
   LEGAL_OVERLAY,
   AKE_SYNTHESIS_OVERLAY,
   LONG_FORM_OVERLAY,
@@ -209,6 +245,7 @@ module.exports = {
   EGREGORE_PROMPTS,
   resolveVoiceMode,
   isLongFormRequest,
+  extractLastUserMessage,
   resolveMaxTokens,
   systemPromptForContext,
   appendContinuityBlocks,

@@ -441,11 +441,12 @@ async function handleChat(req, res) {
       !longForm && ensembleEnabled(req.body, productId, req);
     const ensembleMode = useEnsemble ? resolveEnsembleMode(req.body, req) : null;
 
-    let continuity = assembleContinuity(
+    let continuity = await assembleContinuity(
       req.body,
       userQuery,
       ownerId || 'global',
       morphicPolicy,
+      req,
     );
     let messages = buildGatewayMessages(req.body, continuity.rag.text, {
       canonBlock: continuity.canonBlock,
@@ -905,10 +906,12 @@ app.post('/api/psla/exploration/paths', async (req, res) => {
       req.body.user_message ||
       req.body.text ||
       'Compare litigation paths for this pre-filing situation.';
-    const continuity = assembleContinuity(
+    const continuity = await assembleContinuity(
       { ...req.body, exploration: true, product_id: 'psla-exploration' },
       `${userQuery} ${req.body.jurisdiction || ''} pre-filing litigation paths`,
       ownerId || 'global',
+      undefined,
+      req,
     );
 
     const { paths, model, source } = await generateStructuredPaths({
@@ -1006,7 +1009,7 @@ app.post('/api/psla/exploration/chat', async (req, res) => {
       source = collapsed.source;
       ensembleMeta = collapsed.ensemble;
     } else {
-      continuity = assembleContinuity(body, userQuery, ownerId || 'global', morphicPolicy);
+      continuity = await assembleContinuity(body, userQuery, ownerId || 'global', morphicPolicy, req);
       const messages = buildExplorationChatMessages(body, continuity.rag.text);
       const r = await explorationChat(messages);
       result = { content: r.content, model: r.model };
