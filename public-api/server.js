@@ -475,22 +475,57 @@ async function handleChat(req, res) {
     });
     const temperature = applyProfileTemperature(productTemp, morphicPolicy);
 
+    const slackFast =
+      req.body?.slack_fast === true ||
+      String(req.get('X-S2-Slack-Fast') || '').toLowerCase() === 'true' ||
+      productId === 's2-slack-control-plane';
+
     const useEnsemble =
-      !longForm && ensembleEnabled(req.body, productId, req);
+      !longForm && !slackFast && ensembleEnabled(req.body, productId, req);
     const ensembleMode = useEnsemble ? resolveEnsembleMode(req.body, req) : null;
 
-    let continuity = await assembleContinuity(
-      req.body,
-      userQuery,
-      ownerId || 'global',
-      morphicPolicy,
-      req,
-    );
-    let messages = buildGatewayMessages(req.body, continuity.rag.text, {
-      canonBlock: continuity.canonBlock,
-      tensionBlock: continuity.tensionBlock,
-      cadenceOverlay: continuity.cadence.overlay,
-    });
+    let continuity;
+    let messages;
+    if (slackFast) {
+      const clientMessages = Array.isArray(req.body.messages) ? req.body.messages : [];
+      const systemFromClient = clientMessages.find((m) => m?.role === 'system')?.content;
+      const systemContent =
+        systemFromClient ||
+        'You are Ake on Slack. Reply directly in complete sentences. No chain-of-thought or preamble.';
+      const thread = clientMessages
+        .filter((m) => m?.content && m.role !== 'system')
+        .slice(-8)
+        .map((m) => ({
+          role: m.role === 'assistant' ? 'assistant' : 'user',
+          content: String(m.content),
+        }));
+      messages = [{ role: 'system', content: systemContent }, ...thread];
+      if (!thread.length || thread[thread.length - 1]?.content !== userQuery) {
+        messages.push({ role: 'user', content: userQuery });
+      }
+      continuity = {
+        cadence: { cadence: 'standard', overlay: '' },
+        canonBlock: '',
+        tensionBlock: '',
+        tensionIds: [],
+        rag: { text: '', used: false, chunks: [] },
+        namespaces: [],
+        status: {},
+      };
+    } else {
+      continuity = await assembleContinuity(
+        req.body,
+        userQuery,
+        ownerId || 'global',
+        morphicPolicy,
+        req,
+      );
+      messages = buildGatewayMessages(req.body, continuity.rag.text, {
+        canonBlock: continuity.canonBlock,
+        tensionBlock: continuity.tensionBlock,
+        cadenceOverlay: continuity.cadence.overlay,
+      });
+    }
 
     let result;
     let source;
@@ -620,7 +655,16 @@ async function handleChat(req, res) {
           : 'hosted-ollama-long-form';
         longFormMeta = { long_form: true, outline_expand: false, voice_mode: voiceMode };
       } else {
-        const { result: r, source: s } = await hostedChat({ msgs: messages, tokens: maxTokens });
+        const preferOllama =
+          slackFast ||
+          req.body?.prefer_ollama === true ||
+          req.body?.preferOllama === true ||
+          String(req.get('X-S2-Prefer-Ollama') || '').toLowerCase() === 'true';
+        const { result: r, source: s } = await hostedChat({
+          msgs: messages,
+          tokens: maxTokens,
+          preferOllama,
+        });
         result = r;
         source = s;
       }

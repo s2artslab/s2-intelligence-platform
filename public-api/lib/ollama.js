@@ -9,6 +9,7 @@ const PREFER_LORA = process.env.OLLAMA_PREFER_LORA === 'true';
 const DEFAULT_TEMPERATURE = Number(process.env.OLLAMA_TEMPERATURE || 0.2);
 const DEFAULT_TOP_P = Number(process.env.OLLAMA_TOP_P || 0.85);
 const DEFAULT_REPEAT_PENALTY = Number(process.env.OLLAMA_REPEAT_PENALTY || 1.12);
+const DISABLE_THINK = process.env.OLLAMA_DISABLE_THINK === '1' || process.env.OLLAMA_DISABLE_THINK === 'true';
 
 async function ollamaTags(baseUrl = DEFAULT_BASE) {
   const root = baseUrl.replace(/\/$/, '');
@@ -40,6 +41,34 @@ async function resolveModel(baseUrl = DEFAULT_BASE) {
   return models[0]?.split(':')[0] || DEFAULT_MODEL;
 }
 
+function normalizeQwenContent(content) {
+  let text = String(content || '').replace(/<\/?redacted_thinking>/gi, '').trim();
+  if (!text) return text;
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (lines.length > 1) {
+    const last = lines[lines.length - 1];
+    if (last.length <= 280 && !/^okay,/i.test(last) && !/^hmm,/i.test(last)) {
+      return last;
+    }
+  }
+  return text;
+}
+
+function prepareMessages(messages, useModel) {
+  const isQwen3 = String(useModel).includes('qwen3');
+  if (!isQwen3 && !DISABLE_THINK) return messages;
+  const out = messages.map((m) => ({ ...m }));
+  for (let i = out.length - 1; i >= 0; i -= 1) {
+    if (out[i].role !== 'user') continue;
+    const content = String(out[i].content || '');
+    if (!content.includes('/no_think') && !content.includes('/think')) {
+      out[i] = { ...out[i], content: `/no_think\n${content}` };
+    }
+    break;
+  }
+  return out;
+}
+
 async function ollamaChat({
   messages,
   maxTokens = 800,
@@ -51,21 +80,27 @@ async function ollamaChat({
 }) {
   const root = baseUrl.replace(/\/$/, '');
   const useModel = model || (await resolveModel(baseUrl));
+  const chatMessages = prepareMessages(messages, useModel);
+
+  const payload = {
+    model: useModel,
+    messages: chatMessages,
+    stream: false,
+    options: {
+      temperature,
+      top_p: topP,
+      repeat_penalty: repeatPenalty,
+      num_predict: maxTokens,
+    },
+  };
+  if (DISABLE_THINK || String(useModel).includes('qwen3')) {
+    payload.think = false;
+  }
 
   const res = await fetch(`${root}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: useModel,
-      messages,
-      stream: false,
-      options: {
-        temperature,
-        top_p: topP,
-        repeat_penalty: repeatPenalty,
-        num_predict: maxTokens,
-      },
-    }),
+    body: JSON.stringify(payload),
   });
 
   const text = await res.text();
@@ -83,11 +118,26 @@ async function ollamaChat({
     throw err;
   }
 
-  const content = (data?.message?.content ?? '').trim();
+  const msg = data?.message || {};
+  let content = String(msg.content ?? '').trim();
+  if (String(useModel).includes('qwen3')) {
+    content = normalizeQwenContent(content);
+  }
+  if (!content) {
+    const err = new Error(
+      msg.thinking
+        ? 'Ollama returned thinking-only output; increase max_tokens or disable think mode'
+        : 'Ollama returned empty content',
+    );
+    err.statusCode = 503;
+    err.ollama = data;
+    throw err;
+  }
   return {
     content,
     response: content,
     model: data?.model || useModel,
+    done_reason: data?.done_reason,
   };
 }
 
