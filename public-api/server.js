@@ -491,7 +491,7 @@ async function handleChat(req, res) {
       const systemFromClient = clientMessages.find((m) => m?.role === 'system')?.content;
       const systemContent =
         systemFromClient ||
-        'You are Ake on Slack. Reply directly in complete sentences. No chain-of-thought or preamble.';
+        'You are Ake on Slack. Output ONLY your final answer. Never narrate reasoning, planning, or what the user asked.';
       const thread = clientMessages
         .filter((m) => m?.content && m.role !== 'system')
         .slice(-8)
@@ -557,7 +557,12 @@ async function handleChat(req, res) {
           }
         }
       }
-      const o = await ollamaChat({ messages: msgs, maxTokens: tokens, temperature });
+      const o = await ollamaChat({
+        messages: msgs,
+        maxTokens: tokens,
+        temperature,
+        hideThinking: slackFast,
+      });
       return { result: o, source: 'hosted-ollama' };
     }
 
