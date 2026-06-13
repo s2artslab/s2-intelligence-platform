@@ -11,7 +11,7 @@ const DEFAULT_TEMPERATURE = Number(process.env.OLLAMA_TEMPERATURE || 0.2);
 const DEFAULT_TOP_P = Number(process.env.OLLAMA_TOP_P || 0.85);
 const DEFAULT_REPEAT_PENALTY = Number(process.env.OLLAMA_REPEAT_PENALTY || 1.12);
 const DISABLE_THINK = process.env.OLLAMA_DISABLE_THINK === '1' || process.env.OLLAMA_DISABLE_THINK === 'true';
-const THINK_BUDGET = Number(process.env.OLLAMA_THINK_BUDGET || 1024);
+const THINK_BUDGET = Number(process.env.OLLAMA_THINK_BUDGET || 256);
 
 const THINKING_LINE =
   /^(okay[,!]?|hmm[,!]?|let me|the user|i need to|i should|given |wait[,!]|since |this is|i notice|i'll |my response|they want|checking|from the|looking at|the guidelines|the s² assistant)/i;
@@ -75,7 +75,7 @@ function stripVisibleThinking(text) {
       return lines[i];
     }
   }
-  return t;
+  return '';
 }
 
 function prepareMessages(messages, useModel, hideThinking = false) {
@@ -98,7 +98,8 @@ function prepareMessages(messages, useModel, hideThinking = false) {
   for (let i = out.length - 1; i >= 0; i -= 1) {
     if (out[i].role !== 'user') continue;
     const content = String(out[i].content || '');
-    if (!content.includes('/no_think') && !content.includes('/think')) {
+    // Slack separated-think path: /no_think on user text causes the model to echo it in reasoning.
+    if (!hideThinking && !content.includes('/no_think') && !content.includes('/think')) {
       out[i] = { ...out[i], content: `/no_think\n${content}` };
     }
     break;
@@ -175,13 +176,47 @@ async function ollamaChat({
     },
   };
 
-  // Slack/Qwen: think=true keeps reasoning in message.thinking (hidden); content = final answer.
-  const useSeparatedThink = hideThinking && isQwen3;
-  const predictBudget = useSeparatedThink
-    ? maxTokens + THINK_BUDGET
-    : maxTokens;
+  const slackPath = hideThinking && Boolean(SLACK_MODEL);
+  const slackThinkBudget = Number(process.env.OLLAMA_SLACK_THINK_BUDGET || 256);
+  const useSeparatedThink = hideThinking && isQwen3 && !DISABLE_THINK;
+  const thinkExtra = slackPath ? slackThinkBudget : THINK_BUDGET;
+  const predictBudget = useSeparatedThink ? maxTokens + thinkExtra : maxTokens;
 
   let data;
+  if (slackPath && isQwen3) {
+    const slackOpts = {
+      ...basePayload.options,
+      temperature: Math.min(temperature, 0.35),
+    };
+    data = await callOllama(root, {
+      ...basePayload,
+      think: true,
+      options: { ...slackOpts, num_predict: maxTokens + slackThinkBudget },
+    });
+    let content = extractVisibleContent(data, { hideThinking: true, isQwen3 });
+    const firstLine = (content.split('\n')[0] || '').trim();
+    if (!content || THINKING_LINE.test(firstLine)) {
+      data = await callOllama(root, {
+        ...basePayload,
+        think: false,
+        options: { ...slackOpts, num_predict: maxTokens + 48 },
+      });
+      content = extractVisibleContent(data, { hideThinking: true, isQwen3 });
+    }
+    if (!content) {
+      const err = new Error('Slack fast path returned empty content');
+      err.statusCode = 503;
+      err.ollama = data;
+      throw err;
+    }
+    return {
+      content,
+      response: content,
+      model: data?.model || useModel,
+      done_reason: data?.done_reason,
+    };
+  }
+
   if (useSeparatedThink) {
     data = await callOllama(root, {
       ...basePayload,
